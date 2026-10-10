@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Математика Полада</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Caveat:wght@700&family=Nunito:wght@400;700;800&display=swap">
+<style>
+:root{--paper:#fbfcff;--grid:#d9e4f5;--ink:#1f3a8a;--text:#1d2433;--muted:#5b6578;--line:#c9d3e6;--card:#fff;--bad:#c62828}
+@media (prefers-color-scheme:dark){:root{--paper:#141a26;--grid:#1f2a3d;--ink:#8fb0ff;--text:#e6ebf5;--muted:#9aa5ba;--line:#2c3a52;--card:#1a2131;--bad:#ff7a7a;color-scheme:dark}}
+*{box-sizing:border-box}
+body{margin:0;background-color:var(--paper);color:var(--text);font-family:"Nunito",system-ui,sans-serif;font-size:17px;line-height:1.5;
+background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);background-size:22px 22px}
+.wrap{max-width:680px;margin:0 auto;padding:32px 16px 48px;display:flex;flex-direction:column;gap:18px}
+.eyebrow{font-size:13px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);font-weight:700}
+h1{font-family:"Caveat",cursive;color:var(--ink);font-size:52px;line-height:1;margin:4px 0 0}
+a.card{display:flex;gap:16px;align-items:center;text-decoration:none;color:var(--text);background:var(--card);border:2px solid var(--line);border-radius:14px;padding:18px}
+a.card:hover,a.card:focus-visible{border-color:var(--ink);outline:none}
+.n{font-family:"Caveat",cursive;font-size:44px;color:var(--bad);line-height:1;flex:none;width:36px;text-align:center}
+.t{font-size:20px;font-weight:800;color:var(--ink)} .d{color:var(--muted);font-size:15px}
+.tip{color:var(--muted);font-size:15px;margin:0}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header><span class="eyebrow">Математика · 3 класс</span><h1>Задания для Полада</h1></header>
+  <p class="tip">Сначала пройди экзамен. Потом прочитай работу над ошибками и ответь на 10 вопросов в конце.</p>
+  <a class="card" href="test.html"><span class="n">1</span><span><span class="t">Экзамен: 20 вопросов</span><br><span class="d">Все темы тетради: множества, деление с остатком, величины, время, уравнения, задачи</span></span></a>
+  <a class="card" href="oshibki.html"><span class="n">2</span><span><span class="t">Работа над ошибками</span><br><span class="d">10 твоих ошибок с правилами и 10 вопросов, чтобы больше их не повторять</span></span></a>
+</div>
+</body>
+</html>
