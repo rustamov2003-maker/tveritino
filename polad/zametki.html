@@ -1,0 +1,236 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Шпаргалка Полада</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Caveat:wght@600;700&family=Nunito:wght@400;600;700;800&display=swap">
+<style>
+/* Layout: squared exercise paper; compact rule cards (two columns on desktop) then a 30-question quiz */
+:root{
+  --paper:#fbfcff; --grid:#d9e4f5; --ink:#1f3a8a; --text:#1d2433; --muted:#5b6578;
+  --line:#c9d3e6; --ok:#1c8a4a; --okbg:#e5f5ec; --bad:#c62828; --badbg:#fdeaea; --card:#ffffff; --rule:#eef3ff;
+  --hand:"Caveat","Comic Sans MS",cursive; --body:"Nunito",system-ui,-apple-system,"Segoe UI",sans-serif;
+}
+@media (prefers-color-scheme: dark){:root{
+  --paper:#141a26; --grid:#1f2a3d; --ink:#8fb0ff; --text:#e6ebf5; --muted:#9aa5ba;
+  --line:#2c3a52; --ok:#4cc985; --okbg:#173326; --bad:#ff7a7a; --badbg:#3a1d1f; --card:#1a2131; --rule:#1d2943; color-scheme:dark}}
+*{box-sizing:border-box}
+body{margin:0;background-color:var(--paper);color:var(--text);font-family:var(--body);font-size:17px;line-height:1.5;
+  background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);background-size:22px 22px}
+.wrap{max-width:860px;margin:0 auto;padding-inline:16px;padding-block:24px 56px;display:flex;flex-direction:column;gap:18px}
+.back{color:var(--ink);font-weight:700;text-decoration:none}
+.eyebrow{font-size:13px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);font-weight:700}
+h1{font-family:var(--hand);color:var(--ink);font-size:46px;line-height:1.05;margin:4px 0 0}
+h2{font-family:var(--hand);color:var(--ink);font-size:36px;line-height:1.1;margin:18px 0 0}
+.intro{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px 18px;margin:0}
+.notes{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+@media (max-width:640px){.notes{grid-template-columns:1fr}}
+.note{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px 16px;display:flex;flex-direction:column;gap:8px;min-width:0;scroll-margin-top:16px}
+.note h3{margin:0;font-size:18px;display:flex;gap:10px;align-items:baseline}
+.note h3 .n{font-family:var(--hand);font-size:28px;color:var(--bad);line-height:1;flex:none}
+.note .r{font-family:var(--hand);font-size:23px;line-height:1.2;color:var(--ink);background:var(--rule);border-radius:8px;padding:6px 10px}
+.note .ex{font-size:15px}
+.note .ex b{color:var(--ok)}
+.note .was{font-size:14px;color:var(--muted)}
+.note .was s{text-decoration-color:var(--bad);text-decoration-thickness:2px}
+.num{font-variant-numeric:tabular-nums;white-space:nowrap}
+.progress{display:flex;gap:4px;flex-wrap:wrap}
+.dot{width:20px;height:8px;border-radius:4px;background:var(--line)}
+.dot.ok{background:var(--ok)} .dot.bad{background:var(--bad)} .dot.cur{background:var(--ink)}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:20px;display:flex;flex-direction:column;gap:16px;box-shadow:0 2px 0 var(--line)}
+.qhead{display:flex;justify-content:space-between;align-items:baseline;gap:12px;flex-wrap:wrap}
+.qnum{font-family:var(--hand);font-size:30px;color:var(--ink);line-height:1}
+.topic{font-size:13px;color:var(--muted);font-weight:700}
+.qtext{font-size:20px;font-weight:700;margin:0}
+.opts{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+@media (max-width:520px){.opts{grid-template-columns:1fr}}
+.opt{display:flex;align-items:center;gap:12px;text-align:left;font:inherit;font-size:18px;font-weight:600;color:var(--text);background:var(--paper);border:2px solid var(--line);border-radius:12px;padding:12px 14px;cursor:pointer;min-width:0;transition:border-color .15s,background .15s}
+.opt:hover:not(:disabled){border-color:var(--ink)}
+.opt:focus-visible,.btn:focus-visible{outline:3px solid var(--ink);outline-offset:2px}
+.opt:disabled{cursor:default}
+.letter{flex:none;width:30px;height:30px;border-radius:50%;display:grid;place-items:center;font-family:var(--hand);font-size:22px;color:var(--ink);border:2px solid var(--ink)}
+.opt.ok{border-color:var(--ok);background:var(--okbg)} .opt.ok .letter{color:var(--ok);border-color:var(--ok)}
+.opt.no{border-color:var(--bad);background:var(--badbg)} .opt.no .letter{color:var(--bad);border-color:var(--bad)}
+.opt.dim{opacity:.55}
+.feedback{border-radius:12px;padding:12px 14px;font-size:16px}
+.feedback b{font-family:var(--hand);font-size:24px;display:block;line-height:1.1;margin-bottom:2px}
+.feedback.ok{background:var(--okbg)} .feedback.ok b{color:var(--ok)}
+.feedback.no{background:var(--badbg)} .feedback.no b{color:var(--bad)}
+.feedback a,.review a{color:var(--ink);font-weight:700}
+.actions{display:flex;justify-content:flex-end;gap:10px;flex-wrap:wrap}
+.btn{font:inherit;font-weight:800;font-size:17px;border:none;border-radius:12px;padding:12px 22px;cursor:pointer;background:var(--ink);color:var(--card)}
+.score{display:flex;align-items:center;gap:20px;flex-wrap:wrap}
+.mark{font-family:var(--hand);font-size:96px;line-height:.8;color:var(--bad);border:4px solid var(--bad);border-radius:50%;width:120px;height:120px;display:grid;place-items:center;transform:rotate(-8deg);flex:none}
+.big{font-size:26px;font-weight:800;margin:0}
+.review{display:flex;flex-direction:column;gap:10px;margin:0;padding:0;list-style:none}
+.review li{border-left:4px solid var(--bad);padding:4px 0 4px 12px}
+.review li.good{border-left-color:var(--ok)}
+.review .a{color:var(--muted);font-size:15px}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <a class="back" href="./">← Все задания</a>
+  <header>
+    <span class="eyebrow">Математика · 3 класс · повторение</span>
+    <h1>Шпаргалка и 30 новых вопросов</h1>
+  </header>
+  <p class="intro">Полад, здесь коротко собраны все правила, в которых у тебя были ошибки. Прочитай каждую заметку, лучше вслух. Потом ответь на 30 новых вопросов: в них другие числа и задачи, поэтому запомнить ответы не получится, нужно понять правило.</p>
+
+  <div class="notes">
+    <section class="note" id="n1"><h3><span class="n">1</span>«Сколько всего» десятков, сотен, тысяч</h3>
+      <div class="r">закрой цифры правее разряда — что осталось, столько и «всего»</div>
+      <div class="ex">В 2 170 548 всего десятков тысяч: <b class="num">217</b>. А цифра в разряде десятков тысяч одна: <b>7</b>.</div>
+      <div class="was">У тебя было: <s>170</s></div></section>
+
+    <section class="note" id="n2"><h3><span class="n">2</span>Соседи числа, сколько цифр</h3>
+      <div class="r">«следует за» = +1, «стоит перед» = −1, пятизначное = ровно 5 цифр</div>
+      <div class="ex">349 999 + 1 = <b class="num">350 000</b>; 16 085 000 − 1 = <b class="num">16 084 999</b>; самое большое пятизначное <b class="num">99 999</b>.</div>
+      <div class="was">У тебя было: <s>349 998</s>, <s>16 085 001</s>, <s>999 999</s></div></section>
+
+    <section class="note" id="n3"><h3><span class="n">3</span>Ноль не бывает первым</h3>
+      <div class="r">самое маленькое число: первой ставь самую маленькую цифру, но не 0</div>
+      <div class="ex">Из 2, 5, 0, 9: <b class="num">2059</b>. Ноль идёт вторым.</div>
+      <div class="was">У тебя было: <s>0259</s></div></section>
+
+    <section class="note" id="n4"><h3><span class="n">4</span>Величины: всё в мелкие единицы</h3>
+      <div class="r">1 т = 1000 кг, 1 ц = 100 кг, 1 км = 1000 м, 1 м = 100 см, 1 дм = 100 мм</div>
+      <div class="ex">4 т 68 кг = 4 <b>0</b>68 кг. 4068 + 952 = 5020 кг = <b class="num">5 т 20 кг</b>.</div>
+      <div class="was">У тебя было: <s>5 т 200 кг</s>, а 79 000 мм = <s>79 дм</s> (правильно 790 дм)</div></section>
+
+    <section class="note" id="n5"><h3><span class="n">5</span>Умножение круглых чисел</h3>
+      <div class="r">умножь без нулей, потом припиши все нули обоих чисел</div>
+      <div class="ex">230 · 40 → 23 · 4 = 92, нулей 2 → <b class="num">9200</b>.</div>
+      <div class="was">У тебя было: <s>9020</s></div></section>
+
+    <section class="note" id="n6"><h3><span class="n">6</span>Деление с остатком</h3>
+      <div class="r">остаток всегда меньше делителя; проверка: делитель · частное + остаток</div>
+      <div class="ex">78 : 7 = <b class="num">11 (ост. 1)</b>. 2 : 15 = <b class="num">0 (ост. 2)</b>, это верно.</div>
+      <div class="was">У тебя было: принял <s>78 : 7 = 10 (ост. 8)</s> за верное</div></section>
+
+    <section class="note" id="n7"><h3><span class="n">7</span>Выражения с буквами</h3>
+      <div class="r">«во сколько раз» — делим, «на сколько» — вычитаем</div>
+      <div class="ex">Яблонь d, груш d − 12. Во сколько раз больше: <b class="num">d : (d − 12)</b>.</div>
+      <div class="was">У тебя было: <s>d · (d − 12)</s></div></section>
+
+    <section class="note" id="n8"><h3><span class="n">8</span>Сначала одна часть</h3>
+      <div class="r">сначала делим (сколько в одном), потом умножаем</div>
+      <div class="ex">7 пакетов — 28 кг. 28 : 7 = 4, 4 · 14 = <b class="num">56 кг</b>.</div>
+      <div class="was">У тебя было: <s>28 · 14</s></div></section>
+
+    <section class="note" id="n9"><h3><span class="n">9</span>Кто больше, кто меньше</h3>
+      <div class="r">«A на 120 меньше, чем B» значит B на 120 больше</div>
+      <div class="ex">Второй день 470 м, он на 120 меньше третьего → третий <b class="num">590 м</b>.</div>
+      <div class="was">У тебя было: вычел 120 из второго дня</div></section>
+
+    <section class="note" id="n10"><h3><span class="n">10</span>Периметр и площадь</h3>
+      <div class="r">периметр — сумма всех сторон (см), площадь — длина · ширина (см²)</div>
+      <div class="ex">Лесенка 15 × 6: P = (15 + 6) · 2 = <b class="num">42 дм</b>.</div>
+      <div class="was">У тебя было: <s>50 дм</s></div></section>
+
+    <section class="note" id="n11"><h3><span class="n">11</span>Порядок действий и ноль</h3>
+      <div class="r">сначала скобки, потом · и :, потом + и −; если в произведении 0, всё произведение 0</div>
+      <div class="ex">(12 − 0 : 4) : 3 · (7 − 7) · 45 + (36 : 6) : (15 : 15) = 0 + 6 = <b>6</b>.</div>
+      <div class="was">У тебя было: <s>10</s></div></section>
+
+    <section class="note" id="n12"><h3><span class="n">12</span>Удобный способ</h3>
+      <div class="r">в умножении меняй местами множители, но не превращай · в +</div>
+      <div class="ex">7 · 5 · 14 · 2 = (5 · 2) · (7 · 14) = 10 · 98 = <b class="num">980</b>.</div>
+      <div class="was">У тебя было: <s>84</s></div></section>
+
+    <section class="note" id="n13"><h3><span class="n">13</span>Множества</h3>
+      <div class="r">если круг A внутри круга D, все элементы A есть и в D</div>
+      <div class="ex">Внутри A: 2, 8. В D ещё 3, 5, 7 → D = <b>{2, 3, 5, 7, 8}</b>. Объединение ∪ — все элементы без повторов.</div>
+      <div class="was">У тебя было: <s>D = {5, 7, 3}</s></div></section>
+
+    <section class="note" id="n14"><h3><span class="n">14</span>Сравнение чисел</h3>
+      <div class="r">больше цифр — больше число; цифр поровну — сравнивай слева направо</div>
+      <div class="ex">600 900 и 608 000: 6 = 6, 0 &lt; 8 → <b class="num">600 900 &lt; 608 000</b>.</div>
+      <div class="was">У тебя было: <s>&gt;</s></div></section>
+
+    <section class="note" id="n15"><h3><span class="n">15</span>Сложение столбиком</h3>
+      <div class="r">больше 9 в разряде — пиши единицы, а 1 переноси в следующий разряд</div>
+      <div class="ex">793 178 + 1 345 906 = <b class="num">2 139 084</b>.</div>
+      <div class="was">У тебя было: <s>2 190 084</s></div></section>
+  </div>
+
+  <h2 id="quiz">30 новых вопросов</h2>
+  <div class="progress" id="progress" aria-label="Прогресс"></div>
+  <div id="stage"></div>
+</div>
+
+<script>
+const Q = [
+ {r:1,q:"Сколько всего тысяч в числе 58 307 214?",o:["58 307","7","307","58"],e:"Закрываем 3 последние цифры: 58 307|214 → 58 307."},
+ {r:1,q:"Какая цифра стоит в разряде сотен тысяч числа 6 492 815?",o:["4","64","649","9"],e:"Спрашивают одну цифру. 6 | 4 9 2 | 815: сотни тысяч — это 4."},
+ {r:2,q:"Какое число следует за 89 999?",o:["90 000","89 998","80 000","899 910"],e:"«Следует за» — прибавь 1: 89 999 + 1 = 90 000."},
+ {r:2,q:"Самое маленькое пятизначное число:",o:["10 000","1 000","100 000","11 111"],e:"В нём ровно 5 цифр: 1 и четыре нуля. 1 000 — четырёхзначное, 100 000 — шестизначное."},
+ {r:3,q:"Самое большое трёхзначное число из цифр 0, 4, 7 (каждая один раз):",o:["740","704","470","074"],e:"Для самого большого ставим цифры от большей к меньшей: 7, 4, 0 → 740."},
+ {r:3,q:"Самое маленькое пятизначное число из карточек 0, 0, 3, 5, 8 (каждая карточка один раз):",o:["30 058","00 358","30 580","35 800"],e:"Первой нельзя ставить 0, ставим 3. Дальше оба нуля, потом 5 и 8 → 30 058."},
+ {r:4,q:"5 т 7 кг = … кг",o:["5007 кг","5700 кг","570 кг","5070 кг"],e:"5 т = 5000 кг. 5000 + 7 = 5007. Пустые разряды сотен и десятков — нули."},
+ {r:4,q:"3 км 45 м − 1 км 600 м = ?",o:["1 км 445 м","2 км 445 м","1 км 555 м","2 км 555 м"],e:"3045 м − 1600 м = 1445 м = 1 км 445 м."},
+ {r:5,q:"540 · 300 = ?",o:["162 000","16 200","1 620 000","15 120"],e:"54 · 3 = 162, нулей 3 → 162 000."},
+ {r:5,q:"7000 · 60 = ?",o:["420 000","42 000","4 200 000","4 260"],e:"7 · 6 = 42, нулей 4 → 420 000."},
+ {r:6,q:"47 : 5 = ?",o:["9 (ост. 2)","8 (ост. 7)","9 (ост. 7)","10 (ост. 3)"],e:"5 · 9 = 45, 47 − 45 = 2. Остаток 7 невозможен, он больше 5."},
+ {r:6,q:"При делении на 6 какой остаток НЕ может получиться?",o:["6","0","3","5"],e:"Остаток всегда меньше делителя: при делении на 6 бывают остатки 0, 1, 2, 3, 4, 5."},
+ {r:7,q:"В 3 одинаковых банках a литров сока. Сколько литров в 7 таких банках?",o:["a : 3 · 7","a · 3 · 7","(3 + 7) · a","a + 7"],e:"a : 3 — в одной банке, потом умножаем на 7."},
+ {r:7,q:"В классе x мальчиков, а девочек на 4 больше. Во сколько раз девочек больше, чем мальчиков?",o:["(x + 4) : x","(x + 4) − x","x · (x + 4)","x : 4"],e:"Девочек x + 4. «Во сколько раз» — делим: (x + 4) : x."},
+ {r:8,q:"За 4 одинаковые тетради заплатили 48 руб. Сколько стоят 9 таких тетрадей?",o:["108 руб.","432 руб.","57 руб.","96 руб."],e:"48 : 4 = 12 руб. одна тетрадь. 12 · 9 = 108 руб."},
+ {r:8,q:"Из 12 м ткани шьют 4 одинаковых платья. Сколько таких платьев можно сшить из 27 м?",o:["9","81","7","36"],e:"12 : 4 = 3 м на одно платье. 27 : 3 = 9 платьев."},
+ {r:9,q:"Миша прочитал 60 страниц — это в 3 раза больше, чем Коля. Сколько страниц прочитал Коля?",o:["20","180","57","63"],e:"Миша прочитал больше, значит Коля меньше: 60 : 3 = 20."},
+ {r:9,q:"В корзине 25 яблок — это на 8 меньше, чем груш. Сколько груш?",o:["33","17","25","200"],e:"Яблок меньше, значит груш больше: 25 + 8 = 33."},
+ {r:10,q:"Квадрат со стороной 7 см. Чему равен его периметр?",o:["28 см","49 см","14 см","21 см"],e:"У квадрата 4 равные стороны: 7 · 4 = 28 см. 49 — это площадь (см²)."},
+ {r:10,q:"Чему равен периметр прямоугольника со сторонами 9 см и 4 см?",o:["26 см","36 см","13 см","22 см"],e:"(9 + 4) · 2 = 26 см. 36 — это площадь, а 13 — только половина периметра."},
+ {r:11,q:"25 · (9 − 9) · 4 + 18 : 3 = ?",o:["6","106","0","24"],e:"(9 − 9) = 0, значит 25 · 0 · 4 = 0. Остаётся 18 : 3 = 6."},
+ {r:11,q:"40 − 40 : 8 · 2 = ?",o:["30","10","0","38"],e:"Сначала деление и умножение: 40 : 8 = 5, 5 · 2 = 10. Потом 40 − 10 = 30."},
+ {r:12,q:"Вычисли удобным способом: 4 · 17 · 25",o:["1700","46","170","1725"],e:"(4 · 25) · 17 = 100 · 17 = 1700."},
+ {r:12,q:"Вычисли удобным способом: 2 · 9 · 50",o:["900","61","90","9000"],e:"(2 · 50) · 9 = 100 · 9 = 900."},
+ {r:13,q:"Множество A = {1, 4} нарисовано внутри множества B. В B вне круга A ещё числа 6 и 9. Из чего состоит B?",o:["{1, 4, 6, 9}","{6, 9}","{1, 4}","{4, 6, 9}"],e:"Всё, что внутри A, тоже лежит в B. B = {1, 4, 6, 9}."},
+ {r:13,q:"M = {2, 3, 5, 7}, N = {1, 2, 3, 4}. Найди M ∪ N.",o:["{1, 2, 3, 4, 5, 7}","{2, 3}","{1, 4, 5, 7}","{1, 2, 3, 4}"],e:"Объединение — все элементы обоих множеств, без повторов. {2, 3} — это пересечение."},
+ {r:14,q:"Какое неравенство верно?",o:["703 080 < 730 008","99 999 > 100 000","5 060 000 > 5 600 000","41 205 < 41 199"],e:"703 080 и 730 008: 7 = 7, 0 < 3, значит первое меньше."},
+ {r:14,q:"Какое число самое большое?",o:["2 990 000","2 099 999","2 900 000","2 909 000"],e:"Цифр везде 7. Сравниваем слева: 2 = 2, потом 9 у трёх чисел, потом 9 только у 2 990 000."},
+ {r:15,q:"486 357 + 238 769 = ?",o:["725 126","724 026","625 126","715 126"],e:"Складываем столбиком с переносами: 7 + 9 = 16 (6, переносим 1), и так в каждом разряде → 725 126."},
+ {r:15,q:"600 300 − 254 718 = ?",o:["345 582","354 418","445 582","346 582"],e:"Вычитаем столбиком, занимая у соседнего разряда. Проверка: 345 582 + 254 718 = 600 300."}
+].map(q=>({...q,a:0}));
+const T={1:"«Сколько всего»",2:"Соседи числа",3:"Ноль впереди",4:"Величины",5:"Круглые числа",6:"Остаток",7:"Выражения",8:"Одна часть",9:"Читай условие",10:"Периметр",11:"Порядок действий",12:"Удобный способ",13:"Множества",14:"Сравнение",15:"Столбик"};
+const L=["А","Б","В","Г"];
+let order,idx,answers;
+const stage=document.getElementById("stage"),prog=document.getElementById("progress");
+function shuffle(a){a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a}
+function start(){order=shuffle(Q).map(q=>({...q,perm:shuffle([0,1,2,3])}));idx=0;answers=[];renderQ()}
+function renderProgress(){prog.innerHTML=order.map((_,i)=>{let c="dot";if(answers[i]!==undefined)c+=answers[i].ok?" ok":" bad";else if(i===idx)c+=" cur";return `<span class="${c}"></span>`}).join("")}
+function renderQ(){
+  renderProgress();const q=order[idx];
+  stage.innerHTML=`<section class="card">
+    <div class="qhead"><span class="qnum">№ ${idx+1} из ${order.length}</span><span class="topic">Заметка ${q.r}: ${T[q.r]}</span></div>
+    <p class="qtext">${q.q}</p>
+    <div class="opts">${q.perm.map((oi,k)=>`<button class="opt" data-k="${k}"><span class="letter">${L[k]}</span><span>${q.o[oi]}</span></button>`).join("")}</div>
+    <div id="fb"></div><div class="actions" id="act"></div></section>`;
+  stage.querySelectorAll(".opt").forEach(b=>b.addEventListener("click",()=>choose(+b.dataset.k)));
+}
+function choose(k){
+  const q=order[idx],ck=q.perm.indexOf(q.a),ok=k===ck;
+  answers[idx]={ok,picked:q.o[q.perm[k]]};
+  stage.querySelectorAll(".opt").forEach((b,i)=>{b.disabled=true;b.classList.add(i===ck?"ok":i===k?"no":"dim")});
+  document.getElementById("fb").innerHTML=`<div class="feedback ${ok?"ok":"no"}"><b>${ok?"Верно!":"Неверно. Правильно: "+q.o[q.a]}</b>${q.e}${ok?"":` <a href="#n${q.r}">Перечитать заметку ${q.r}</a>`}</div>`;
+  const last=idx===order.length-1;
+  document.getElementById("act").innerHTML=`<button class="btn" id="next">${last?"Узнать результат":"Дальше →"}</button>`;
+  document.getElementById("next").addEventListener("click",()=>{if(last)finish();else{idx++;renderQ();document.getElementById("quiz").scrollIntoView()}});
+  renderProgress();
+}
+function finish(){
+  idx=order.length;renderProgress();
+  const n=answers.filter(a=>a.ok).length;
+  const [m,msg]=n>=27?["5","Отлично! Ты разобрался во всех правилах."]:n>=21?["4","Хорошо! Перечитай заметки, где ошибся."]:n>=15?["3","Перечитай шпаргалку и пройди ещё раз."]:["2","Прочитай все 15 заметок вслух и попробуй снова."];
+  stage.innerHTML=`<section class="card"><div class="score"><div class="mark">${m}</div><div><p class="big">${n} из ${order.length} верно</p><p style="margin:0">${msg}</p></div></div>
+    <div class="actions"><button class="btn" id="again">Пройти ещё раз</button></div></section>
+    <section class="card"><span class="topic">Разбор</span><ul class="review">${order.map((q,i)=>{const a=answers[i];return `<li class="${a.ok?"good":""}"><b>${i+1}. ${q.q}</b><div class="a">${a.ok?"✓ "+q.o[q.a]:"Твой ответ: "+a.picked+" · Правильно: "+q.o[q.a]+" · <a href='#n"+q.r+"'>заметка "+q.r+"</a>"}</div></li>`}).join("")}</ul></section>`;
+  document.getElementById("again").addEventListener("click",()=>{start();document.getElementById("quiz").scrollIntoView()});
+}
+start();
+</script>
+</body>
+</html>
