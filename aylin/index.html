@@ -142,6 +142,21 @@ button:focus-visible,a:focus-visible{outline:3px solid var(--accent);outline-off
 .sbar .track i{display:block;height:100%;background:var(--c)}
 @media (max-width:480px){.sbar{grid-template-columns:100px 1fr 40px}}
 .empty{text-align:center;color:var(--muted);padding:24px 8px}
+/* Активность */
+.act{background:var(--card);border:2px solid var(--accent);border-radius:16px;padding:16px;display:flex;flex-direction:column;gap:10px}
+.act-head{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;flex-wrap:wrap}
+.act h2{font-size:18px}
+.live{font-size:12px;color:var(--muted);display:inline-flex;align-items:center;gap:6px}
+.live i{width:8px;height:8px;border-radius:50%;background:var(--ok);display:inline-block;animation:pulse 2s infinite}
+@keyframes pulse{50%{opacity:.3}}
+.act-stats{display:flex;flex-direction:column;gap:2px;font-size:14px;color:var(--muted)}
+.act-stats b{color:var(--ink)}
+.feed{list-style:none;margin:0;padding:0;display:flex;flex-direction:column}
+.feed li{display:grid;grid-template-columns:auto auto 1fr;gap:4px 12px;padding:8px 0;border-top:1px solid var(--line);font-size:14px;align-items:baseline}
+.feed .ft{color:var(--muted);white-space:nowrap}.feed .fd{color:var(--muted);font-size:12px}
+.feed .g5{color:var(--ok)}.feed .g4{color:var(--accent)}.feed .g3{color:var(--warn)}.feed .g2{color:var(--bad)}
+@media (max-width:520px){.feed li{grid-template-columns:auto 1fr}.feed .fx{grid-column:1/-1}}
+.act .chip{align-self:flex-start}
 /* Прогресс */
 .psum{grid-template-columns:repeat(4,1fr)}
 @media (max-width:600px){.psum{grid-template-columns:1fr 1fr}}
@@ -181,6 +196,7 @@ a.btn{text-decoration:none;display:inline-block}
     </div>
     <div class="board" id="board"></div>
   </header>
+  <section id="activity"></section>
   <nav class="tabs" role="tablist" id="tabs">
     <button class="tab" role="tab" data-tab="tests" aria-selected="true">Тесты</button>
     <button class="tab" role="tab" data-tab="cheats" aria-selected="false">Шпаргалки</button>
@@ -824,8 +840,10 @@ async function initCloud(){
         missing.forEach(a => col.doc(a.id).set(a).catch(()=>{}));
         cloud.push(...missing);
       }
+      const first = mode !== "cloud";
       mode = "cloud"; setSync();
       attempts = cloud.sort((a,b) => a.ts - b.ts);
+      if (first) { subscribeEvents(); logOpen(); }
       lsSet(LKEY, attempts);
       renderAll(true);
     }, () => { mode = "local"; setSync(); });
@@ -880,7 +898,7 @@ function confirmLeave(){ // тест сохраняется черновиком
   return true;
 }
 function renderAll(fromSync){
-  renderBoard();
+  renderBoard(); renderActivity();
   if (fromSync && (quiz || lastResult)) return;
   document.querySelectorAll(".tab").forEach(b => b.setAttribute("aria-selected", String(b.dataset.tab === tab && !quiz && !lastResult)));
   if (quiz) return renderQuiz();
@@ -967,6 +985,7 @@ async function finish(){
   const picks = {}; wrongItems.forEach(x => picks[x.id] = x.pick == null ? "" : x.pick);
   const a = {id:"a"+Date.now().toString(36)+Math.random().toString(36).slice(2,6), ts:Date.now(), day:dayKey(Date.now()), kind:quiz.kind, subj:quiz.subj, title:quiz.title,
     n, ok, pct, grade: gradeOf(pct), answered: items.map(x=>x.id), wrong: wrongItems.map(x=>x.id), picks, mins: Math.max(1, Math.round((Date.now()-quiz.started)/60000))};
+  a.dev = deviceInfo();
   lsDel(DKEY);
   lastResult = {a, wrongItems};
   quiz = null;
@@ -1136,6 +1155,64 @@ function renderDiary(){
     const manual = () => { const c = $("#copied"); c.hidden = false; c.innerHTML = 'Скопируй ссылку вручную: <input id="repLink" style="width:100%" readonly>'; const i = $("#repLink"); i.value = link; i.select(); };
     try { navigator.clipboard.writeText(link).then(done, manual); } catch(e) { manual(); }
   };
+}
+
+// ---------- активность Айлин (входы и тесты) — хранится в облаке артефакта ----------
+const DEVKEY = "aylin-device-v1", OPENKEY = "aylin-lastopen-v1";
+let events = [];
+function deviceInfo(){
+  let id = lsGet(DEVKEY); if (!id) { id = "d" + Math.random().toString(36).slice(2,9); lsSet(DEVKEY, id); }
+  const u = navigator.userAgent;
+  const os = /iPhone/.test(u) ? "iPhone" : /iPad/.test(u) ? "iPad" : /Android/.test(u) ? (/Mobile/.test(u) ? "Android-телефон" : "Android-планшет") :
+             /Windows/.test(u) ? "Компьютер Windows" : /Mac OS X/.test(u) ? "Mac" : /Linux/.test(u) ? "Компьютер Linux" : "Устройство";
+  const br = /YaBrowser/.test(u) ? "Яндекс Браузер" : /Edg\//.test(u) ? "Edge" : /OPR\//.test(u) ? "Opera" : /Firefox/.test(u) ? "Firefox" :
+             /Chrome\//.test(u) ? "Chrome" : /Safari/.test(u) ? "Safari" : "браузер";
+  const app = /Claude/i.test(u) ? " · приложение Claude" : "";
+  return { id, l: os + " · " + br + app };
+}
+function logOpen(){
+  if (!db || mode !== "cloud") return;
+  const last = +(lsGet(OPENKEY) || 0);
+  if (Date.now() - last < 30*60*1000) return;
+  lsSet(OPENKEY, Date.now());
+  const ts = Date.now(), id = "o" + ts.toString(36) + Math.random().toString(36).slice(2,5);
+  db.collection("events").doc(id).set({id, ts, e:"open", dev: deviceInfo()}).catch(()=>{});
+}
+function subscribeEvents(){
+  if (!db) return;
+  db.collection("events").onSnapshot(snap => { events = snap.docs.map(d => d.data()); renderActivity(); }, () => {});
+}
+function feedItems(){
+  const items = events.map(x => ({ts:x.ts, e:"open", dev:x.dev}))
+    .concat(attempts.map(a => ({ts:a.ts, e:a.kind === "test" ? "test" : "fix", dev:a.dev, a})));
+  return items.sort((x,y) => y.ts - x.ts);
+}
+function feedText(x){
+  if (x.e === "open") return "Зашла в тренажёр";
+  const a = x.a;
+  if (x.e === "test") return `Тест «${esc(a.title)}»: ${a.ok} из ${a.n}, оценка <b class="g${a.grade}">${a.grade}</b>${a.mins ? ` · ${a.mins} мин` : ""}`;
+  return `Работа над ошибками: ${a.ok} из ${a.n} верно`;
+}
+let feedAll = false;
+function renderActivity(){
+  const el = document.getElementById("activity"); if (!el) return;
+  const items = feedItems(), today = dayKey(Date.now());
+  const td = items.filter(x => dayKey(x.ts) === today), tdTests = td.filter(x => x.e === "test");
+  const lastOpen = items.find(x => x.e === "open") || items[0];
+  const devs = [...new Set(items.map(x => x.dev && x.dev.l).filter(Boolean))];
+  const list = feedAll ? items.slice(0, 100) : items.slice(0, 6);
+  el.innerHTML = `<div class="act">
+    <div class="act-head"><div><div class="eyebrow">Активность Айлин</div>
+      <h2>${lastOpen ? `Последняя активность: ${dTime(lastOpen.ts)}` : "Пока нет активности"}</h2></div>
+      ${mode === "cloud" ? `<span class="live"><i></i>обновляется сама</span>` : `<span class="live off">только это устройство</span>`}</div>
+    <div class="act-stats num">
+      <span>Сегодня: <b>${td.filter(x=>x.e==="open").length}</b> ${plural(td.filter(x=>x.e==="open").length,"вход","входа","входов")}, <b>${tdTests.length}</b> ${plural(tdTests.length,"тест","теста","тестов")}${tdTests.length ? `, средняя оценка <b class="${gcls(avg(tdTests.map(x=>x.a.grade)))}">${fmt(avg(tdTests.map(x=>x.a.grade)))}</b>` : ""}</span>
+      <span>Устройства: <b>${devs.length ? devs.map(esc).join("; ") : "—"}</b></span>
+    </div>
+    ${list.length ? `<ul class="feed">${list.map(x => `<li><span class="ft num">${dTime(x.ts)}</span><span class="fd">${x.dev ? esc(x.dev.l) : "устройство не записано"}</span><span class="fx">${feedText(x)}</span></li>`).join("")}</ul>` : `<p class="note">Как только Айлин зайдёт и пройдёт тест, здесь появится запись.</p>`}
+    ${items.length > 6 ? `<button class="chip link" id="feedMore">${feedAll ? "Свернуть" : `Показать всё (${items.length})`}</button>` : ""}
+  </div>`;
+  const m = document.getElementById("feedMore"); if (m) m.onclick = () => { feedAll = !feedAll; renderActivity(); };
 }
 
 const REP = location.hash.startsWith("#report=") ? decodeReport(location.hash.slice(8)) : null;
