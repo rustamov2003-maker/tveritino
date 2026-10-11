@@ -28,6 +28,7 @@
   --ok:#53C28B; --ok-bg:#16302A; --bad:#FF7A72; --bad-bg:#3A1E22; --warn:#E8B04E; --warn-bg:#352A16;
   --az:#FF6F86; --wh:#E5A847; --geo:#45C3CC; --nat:#8F9BFF; --lit:#D18BE8; --en:#5DB4F5; color-scheme:dark}
 *{box-sizing:border-box}
+[hidden]{display:none!important}
 body{background:var(--paper);color:var(--ink);font-family:var(--body);font-size:16px;line-height:1.5;-webkit-font-smoothing:antialiased}
 .wrap{max-width:780px;margin:0 auto;padding-inline:16px;padding-block:20px 64px;display:flex;flex-direction:column;gap:20px}
 h1,h2,h3{font-family:var(--display);line-height:1.2;margin:0;text-wrap:balance}
@@ -141,6 +142,29 @@ button:focus-visible,a:focus-visible{outline:3px solid var(--accent);outline-off
 .sbar .track i{display:block;height:100%;background:var(--c)}
 @media (max-width:480px){.sbar{grid-template-columns:100px 1fr 40px}}
 .empty{text-align:center;color:var(--muted);padding:24px 8px}
+/* Прогресс */
+.psum{grid-template-columns:repeat(4,1fr)}
+@media (max-width:600px){.psum{grid-template-columns:1fr 1fr}}
+.legend{display:flex;flex-wrap:wrap;gap:8px}
+.pgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:12px}
+.pcard{background:var(--card);border:1px solid var(--line);border-top:5px solid var(--c);border-radius:16px;padding:16px;display:flex;flex-direction:column;gap:10px;min-width:0}
+.phead{display:flex;justify-content:space-between;align-items:flex-start;gap:8px}
+.phead h3{font-family:var(--display);font-weight:700;font-size:15px;color:var(--c)}
+.stage{display:inline-block;font-size:12px;font-weight:700;border-radius:999px;padding:3px 10px;white-space:nowrap}
+.st0{background:var(--soft);color:var(--muted)}.st1{background:var(--warn-bg);color:var(--warn)}
+.st2{background:color-mix(in srgb,var(--accent) 14%,var(--card));color:var(--accent)}.st3{background:var(--ok-bg);color:var(--ok)}
+.steps{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(4,1fr);gap:4px}
+.steps li{height:6px;border-radius:4px;background:var(--soft)}
+.steps li.on{background:var(--c)}.steps li.cur{box-shadow:0 0 0 2px color-mix(in srgb,var(--c) 35%,transparent)}
+.cov{display:flex;flex-direction:column;gap:4px;font-size:14px}
+.cov .track{height:10px;border-radius:6px;background:var(--soft);overflow:hidden}.cov .track i{display:block;height:100%;background:var(--c)}
+.pstats{display:grid;grid-template-columns:1fr 1fr;gap:4px 12px;font-size:14px;color:var(--muted)}
+.pstats b{color:var(--ink)}
+.hist{display:flex;flex-wrap:wrap;gap:6px}
+.hchip{font-size:12px;border:1px solid var(--line);border-radius:8px;padding:2px 8px;background:var(--soft);color:var(--ink)}
+.hchip b{font-family:var(--display)}.hchip.g5 b{color:var(--ok)}.hchip.g4 b{color:var(--accent)}.hchip.g3 b{color:var(--warn)}.hchip.g2 b{color:var(--bad)}
+.days tr.dayrow td{background:var(--soft)}
+a.btn{text-decoration:none;display:inline-block}
 @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
 </style>
 </head>
@@ -161,7 +185,7 @@ button:focus-visible,a:focus-visible{outline:3px solid var(--accent);outline-off
     <button class="tab" role="tab" data-tab="tests" aria-selected="true">Тесты</button>
     <button class="tab" role="tab" data-tab="cheats" aria-selected="false">Шпаргалки</button>
     <button class="tab" role="tab" data-tab="fix" aria-selected="false">Ошибки<span class="badge" id="fixBadge" hidden>0</span></button>
-    <button class="tab" role="tab" data-tab="diary" aria-selected="false">Дневник</button>
+    <button class="tab" role="tab" data-tab="diary" aria-selected="false">Прогресс</button>
   </nav>
   <main id="view"></main>
 </div>
@@ -1020,31 +1044,106 @@ function renderFix(){
   bindCheatLinks();
 }
 
-// ---------- дневник ----------
-function renderDiary(){
-  const t = tests();
-  if (!t.length) { $("#view").innerHTML = `<div class="panel empty"><h2>Дневник пуст</h2><p>После первого теста здесь появятся оценки по дням и по предметам.</p></div>`; return; }
-  const days = {}; t.forEach(a => (days[a.day] = days[a.day] || []).push(a));
-  const keys = Object.keys(days).sort().reverse();
-  const subjRows = Object.keys(SUBJECTS).concat("mso","mix").map(s => {
-    const m = t.filter(a=>a.subj===s), av = avg(m.map(a=>a.grade)), p = avg(m.map(a=>a.pct));
-    const name = s==="mix" ? "Смешанный" : s==="mso" ? "МСО Геогр." : SUBJECTS[s].short;
-    return `<div class="sbar ${s==="mix"?"":s==="mso"?"c-geo":"c-"+s}" style="${s==="mix"?"--c:var(--accent)":""}"><span>${name}</span><span class="track"><i style="width:${p||0}%"></i></span><b class="num ${gcls(av)}">${fmt(av)}</b></div>`;
+// ---------- прогресс ----------
+const STAGES = [
+  {name:"Не начат",          cls:"st0", tip:"Пройди первый тест по предмету."},
+  {name:"Изучаем",           cls:"st1", tip:"Читай шпаргалку и проходи тест каждый день. Цель — оценка 4."},
+  {name:"Закрепляем",        cls:"st2", tip:"Исправь все ошибки и добейся пятёрки."},
+  {name:"Готово к экзамену", cls:"st3", tip:"Повторяй раз в 2–3 дня, чтобы не забыть."}
+];
+const PKEYS = () => ["mso"].concat(Object.keys(SUBJECTS));
+const pName = k => k === "mso" ? "МСО География · Раздел 1" : SUBJECTS[k].name;
+const pCls  = k => k === "mso" ? "c-geo" : "c-" + k;
+const bankIds = k => k === "mso" ? MSO_GEO : BANK[k].map(r => r[0]);
+
+function buildStats(){
+  const correct = new Set();
+  attempts.forEach(a => (a.answered||[]).forEach(id => { if (!(a.wrong||[]).includes(id)) correct.add(id); }));
+  const open = new Set(unresolved().map(x => x.id));
+  const s = {};
+  PKEYS().forEach(k => {
+    const ids = bankIds(k);
+    s[k] = { l: ids.filter(id => correct.has(id)).length, o: ids.filter(id => open.has(id)).length,
+             t: tests().filter(a => a.subj === k).map(a => [a.ts, a.ok, a.n, a.grade]) };
+  });
+  return { at: Date.now(), s, mix: tests().filter(a => a.subj === "mix").map(a => [a.ts, a.ok, a.n, a.grade]), f: open.size };
+}
+function stageOf(k, st){
+  const total = bankIds(k).length, p = st.l / total, last = st.t.length ? st.t[st.t.length-1][3] : 0;
+  if (!st.t.length && !st.l) return 0;
+  if (p >= 0.9 && last === 5 && st.o === 0) return 3;
+  if (p >= 0.6 && last >= 4) return 2;
+  return 1;
+}
+const dShort = ts => new Date(ts).toLocaleDateString("ru-RU",{day:"2-digit",month:"2-digit"});
+const dTime  = ts => new Date(ts).toLocaleString("ru-RU",{day:"2-digit",month:"2-digit",hour:"2-digit",minute:"2-digit"});
+
+function encodeReport(o){ return btoa(unescape(encodeURIComponent(JSON.stringify(o)))).replace(/\+/g,"-").replace(/\//g,"_").replace(/=+$/,""); }
+function decodeReport(c){ try { c = c.replace(/-/g,"+").replace(/_/g,"/"); return JSON.parse(decodeURIComponent(escape(atob(c)))); } catch(e){ return null; } }
+function reportLink(){ return location.origin + location.pathname + "#report=" + encodeReport(buildStats()); }
+
+function progressHTML(S, isReport){
+  const keys = PKEYS();
+  const subjOnly = Object.keys(SUBJECTS);
+  const ready = Math.round(avg(subjOnly.map(k => S.s[k] ? S.s[k].l / bankIds(k).length * 100 : 0)) || 0);
+  const allT = keys.flatMap(k => (S.s[k]?S.s[k].t:[]).map(x => ({k, x}))).concat((S.mix||[]).map(x => ({k:"mix", x}))).sort((a,b)=>b.x[0]-a.x[0]);
+  const gAll = avg(allT.map(o => o.x[3]));
+  const cards = keys.map(k => {
+    const st = S.s[k] || {l:0,o:0,t:[]}, total = bankIds(k).length, sg = stageOf(k, st), S0 = STAGES[sg];
+    const last = st.t[st.t.length-1], best = st.t.length ? Math.max(...st.t.map(x=>x[3])) : null, av = avg(st.t.map(x=>x[3]));
+    return `<article class="pcard ${pCls(k)}">
+      <div class="phead"><h3>${pName(k)}</h3><span class="stage ${S0.cls}">${S0.name}</span></div>
+      <ol class="steps" aria-label="Этап ${sg+1} из 4">${STAGES.map((x,i)=>`<li class="${i<=sg?"on":""} ${i===sg?"cur":""}" title="${x.name}"></li>`).join("")}</ol>
+      <div class="cov"><span class="track"><i style="width:${st.l/total*100}%"></i></span><span class="num">Выучено <b>${st.l}</b> из ${total} вопросов</span></div>
+      <div class="pstats num">
+        <span>Тестов: <b>${st.t.length}</b></span>
+        <span>Последний: <b>${last ? dShort(last[0]) : "—"}</b></span>
+        <span>Оценка: <b class="${gcls(last&&last[3])}">${last ? last[3] : "—"}</b></span>
+        <span>Лучшая: <b class="${gcls(best)}">${best ?? "—"}</b></span>
+        <span>Средняя: <b class="${gcls(av)}">${fmt(av)}</b></span>
+        <span>Ошибок открыто: <b class="${st.o?"g2":"g5"}">${st.o}</b></span>
+      </div>
+      ${st.t.length ? `<div class="hist">${st.t.slice(-10).map(x=>`<span class="hchip g${x[3]}" title="${dTime(x[0])}: ${x[1]} из ${x[2]}">${dShort(x[0])} · <b>${x[3]}</b></span>`).join("")}</div>` : ""}
+      <p class="note">Дальше: ${S0.tip}</p>
+    </article>`;
   }).join("");
-  $("#view").innerHTML = `<section style="display:flex;flex-direction:column;gap:16px">
-    <div class="panel"><h2>По предметам</h2><p class="note">Полоска — средний процент правильных ответов, справа — средняя оценка.</p><div class="bars">${subjRows}</div></div>
-    <div class="panel"><h2>По дням</h2><div class="tblwrap"><table class="days"><thead><tr><th>День</th><th>Тесты</th><th>Средний %</th><th>Оценка дня</th></tr></thead><tbody>
-      ${keys.map(k => { const d = days[k], av = avg(d.map(a=>a.grade)); return `<tr><td>${dateRu(k)}</td><td class="num">${d.length}</td><td class="num">${Math.round(avg(d.map(a=>a.pct)))}%</td><td class="g num ${gcls(av)}">${fmt(av)}</td></tr>`; }).join("")}
-    </tbody></table></div></div>
-    <div class="panel"><h2>Все тесты</h2><div class="tblwrap"><table class="days"><thead><tr><th>Когда</th><th>Тест</th><th>Верно</th><th>Оценка</th></tr></thead><tbody>
-      ${t.slice().reverse().map(a => `<tr><td class="num">${new Date(a.ts).toLocaleString("ru-RU",{day:"2-digit",month:"2-digit",hour:"2-digit",minute:"2-digit"})}</td><td>${esc(a.title)}</td><td class="num">${a.ok}/${a.n}</td><td class="g num g${a.grade}">${a.grade}</td></tr>`).join("")}
-    </tbody></table></div></div>
+  const days = {}; allT.forEach(o => { const d = dayKey(o.x[0]); (days[d] = days[d] || []).push(o); });
+  return `<section style="display:flex;flex-direction:column;gap:16px">
+    ${isReport ? `<div class="panel"><div class="eyebrow">Отчёт об учёбе</div><h2>Прогресс Айлин на ${dTime(S.at)}</h2><p class="note">Это снимок результатов с устройства Айлин. Чтобы увидеть свежие данные, попроси прислать отчёт ещё раз.</p><div class="row"><a class="btn ghost" href="${location.pathname}">Открыть тренажёр</a></div></div>` :
+      `<div class="panel"><h2>Отчёт для родителей</h2><p class="note">Кнопка создаёт ссылку со всеми результатами. Папа откроет её на своём телефоне и увидит эту страницу.</p>
+        <div class="row"><a class="btn" id="wa" target="_blank" rel="noopener">Отправить папе в WhatsApp</a><button class="btn ghost" id="copyRep">Скопировать ссылку</button></div><p class="note" id="copied" hidden>Ссылка скопирована.</p></div>`}
+    <div class="board psum">
+      <div class="cell"><span class="lbl">Готовность к МЦКО</span><span class="big num">${ready}%</span><span class="lbl">доля выученных вопросов</span></div>
+      <div class="cell"><span class="lbl">Тестов пройдено</span><span class="big num">${allT.length}</span></div>
+      <div class="cell"><span class="lbl">Средняя оценка</span><span class="big num ${gcls(gAll)}">${fmt(gAll)}</span></div>
+      <div class="cell"><span class="lbl">Ошибок открыто</span><span class="big num ${S.f?"g2":"g5"}">${S.f}</span></div>
+    </div>
+    <div class="legend">${STAGES.map((x,i)=>`<span class="stage ${x.cls}">${i+1}. ${x.name}</span>`).join("")}</div>
+    <div class="pgrid">${cards}</div>
+    ${(S.mix||[]).length ? `<div class="panel"><h2>Смешанный МЦКО</h2><div class="hist">${S.mix.map(x=>`<span class="hchip g${x[3]}">${dShort(x[0])} · ${x[1]}/${x[2]} · <b>${x[3]}</b></span>`).join("")}</div></div>` : ""}
+    <div class="panel"><h2>Все тесты по дням</h2>${allT.length ? `<div class="tblwrap"><table class="days"><thead><tr><th>Когда</th><th>Тест</th><th>Верно</th><th>Оценка</th></tr></thead><tbody>
+      ${Object.keys(days).sort().reverse().map(d => `<tr class="dayrow"><td colspan="3"><b>${dateRu(d)}</b> · ${days[d].length} ${plural(days[d].length,"тест","теста","тестов")}</td><td class="g num ${gcls(avg(days[d].map(o=>o.x[3])))}">${fmt(avg(days[d].map(o=>o.x[3])))}</td></tr>` +
+        days[d].map(o => `<tr><td class="num">${new Date(o.x[0]).toLocaleTimeString("ru-RU",{hour:"2-digit",minute:"2-digit"})}</td><td>${o.k==="mix"?"Смешанный МЦКО":pName(o.k)}</td><td class="num">${o.x[1]}/${o.x[2]}</td><td class="g num g${o.x[3]}">${o.x[3]}</td></tr>`).join("")).join("")}
+    </tbody></table></div>` : `<p class="note">Пока нет пройденных тестов.</p>`}</div>
   </section>`;
 }
+function renderDiary(){
+  $("#view").innerHTML = progressHTML(buildStats(), false);
+  const link = reportLink();
+  $("#wa").href = "https://wa.me/?text=" + encodeURIComponent("Отчёт Айлин по тренажёру МЦКО: " + link);
+  $("#copyRep").onclick = () => {
+    const done = () => { const c = $("#copied"); c.hidden = false; c.textContent = "Ссылка скопирована."; };
+    const manual = () => { const c = $("#copied"); c.hidden = false; c.innerHTML = 'Скопируй ссылку вручную: <input id="repLink" style="width:100%" readonly>'; const i = $("#repLink"); i.value = link; i.select(); };
+    try { navigator.clipboard.writeText(link).then(done, manual); } catch(e) { manual(); }
+  };
+}
 
-setSync();
-renderAll();
-initCloud();
+const REP = location.hash.startsWith("#report=") ? decodeReport(location.hash.slice(8)) : null;
+if (REP) {
+  document.getElementById("tabs").hidden = true; document.getElementById("board").hidden = true; document.getElementById("sync").hidden = true;
+  $("#view").innerHTML = progressHTML(REP, true);
+} else { setSync(); renderAll(); initCloud(); }
+window.addEventListener("hashchange", () => { if (location.hash.startsWith("#report=") || REP) location.reload(); });
 })();
 
 </script>
