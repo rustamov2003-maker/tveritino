@@ -10,12 +10,12 @@
 /* Layout: squared exercise paper; pick test length + one of 100 variant tiles, then one question per screen */
 :root{
   --paper:#fbfcff; --grid:#d9e4f5; --ink:#1f3a8a; --text:#1d2433; --muted:#5b6578;
-  --line:#c9d3e6; --ok:#1c8a4a; --okbg:#e5f5ec; --mid:#b26a00; --midbg:#fff1dc; --bad:#c62828; --badbg:#fdeaea; --card:#ffffff;
+  --line:#c9d3e6; --ok:#1c8a4a; --okbg:#e5f5ec; --mid:#b26a00; --midbg:#fff1dc; --bad:#c62828; --badbg:#fdeaea; --card:#ffffff; --rulebg:#eef3ff;
   --hand:"Caveat","Comic Sans MS",cursive; --body:"Nunito",system-ui,-apple-system,"Segoe UI",sans-serif;
 }
 @media (prefers-color-scheme: dark){:root{
   --paper:#141a26; --grid:#1f2a3d; --ink:#8fb0ff; --text:#e6ebf5; --muted:#9aa5ba;
-  --line:#2c3a52; --ok:#4cc985; --okbg:#173326; --mid:#f0b45a; --midbg:#3a2c14; --bad:#ff7a7a; --badbg:#3a1d1f; --card:#1a2131; color-scheme:dark}}
+  --line:#2c3a52; --ok:#4cc985; --okbg:#173326; --mid:#f0b45a; --midbg:#3a2c14; --bad:#ff7a7a; --badbg:#3a1d1f; --card:#1a2131; --rulebg:#1d2943; color-scheme:dark}}
 *{box-sizing:border-box}
 body{margin:0;background-color:var(--paper);color:var(--text);font-family:var(--body);font-size:17px;line-height:1.5;
   background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);background-size:22px 22px}
@@ -71,6 +71,17 @@ h1{font-family:var(--hand);color:var(--ink);font-size:46px;line-height:1.05;marg
 .review li{border-left:4px solid var(--bad);padding:4px 0 4px 12px}
 .review li.good{border-left-color:var(--ok)}
 .review .a{color:var(--muted);font-size:15px}
+.intro{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px 16px;margin:0}
+.lessons{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+@media (max-width:640px){.lessons{grid-template-columns:1fr}}
+.lesson{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px 16px;display:flex;flex-direction:column;gap:10px;min-width:0;scroll-margin-top:16px}
+.lesson h3{margin:0;font-size:18px;display:flex;gap:10px;align-items:baseline}
+.ln{font-family:var(--hand);font-size:28px;color:var(--bad);line-height:1;flex:none}
+.rule{font-family:var(--hand);font-size:23px;line-height:1.2;color:var(--ink);background:var(--rulebg);border-radius:10px;padding:8px 12px}
+.rule b{font-weight:700}
+.rex{font-family:var(--body);font-size:15px;color:var(--text)}
+.rule .rex{display:inline-block;margin-top:4px}
+.lesson-mini{display:flex;flex-direction:column;gap:8px;padding-top:6px}
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
 </style>
 </head>
@@ -79,7 +90,7 @@ h1{font-family:var(--hand);color:var(--ink);font-size:46px;line-height:1.05;marg
   <a class="back" href="./">← Все задания</a>
   <header>
     <span class="eyebrow">Математика · 3 класс · все темы тетради</span>
-    <h1>Тренажёр: 100 вариантов</h1>
+    <h1>Тренажёр: экзамены и обучение</h1>
   </header>
   <main id="app"></main>
 </div>
@@ -184,9 +195,46 @@ const G=[
   e:F[1]===0?"У буквы «Р» нет осей симметрии: ни одна прямая не делит её на две одинаковые половинки.":`У ${F[0]} осей симметрии: ${F[1]}.`}}
 ];
 
+
+/* ---------- lessons: one per generator, same order ---------- */
+const N=[
+ ["«Сколько всего»","закрой пальцем цифры правее нужного разряда — что осталось, столько и «всего»","В 2 170 548 всего десятков тысяч — 217. А цифра в разряде десятков тысяч — только 7."],
+ ["Разряды","справа налево: единицы, десятки, сотни, тысячи, десятки тысяч, сотни тысяч, миллионы","В 3 497 641: сотни тысяч — 4, десятки тысяч — 9, тысячи — 7."],
+ ["Соседи числа","«следует за» = +1, «стоит перед» = −1","За 349 999 следует 350 000. Перед 16 085 000 стоит 16 084 999."],
+ ["Сколько цифр","самое маленькое n-значное — единица и нули, самое большое — n девяток","Пятизначные числа: от 10 000 до 99 999."],
+ ["Ноль впереди","самое маленькое: первой ставь самую маленькую цифру, но не 0; самое большое: цифры от большей к меньшей","Из 2, 5, 0, 9: самое маленькое 2059, самое большое 9520."],
+ ["Запись числа","пиши по классам, в каждом классе 3 цифры; пустые места — нули","7 млн 25 тыс. 8 ед. = 7 025 008."],
+ ["Единицы массы","1 т = 1000 кг, 1 ц = 100 кг, 1 т = 10 ц, 1 кг = 1000 г","5 т 7 кг = 5007 кг. 3 т 5 ц = 3500 кг."],
+ ["Сложение величин","переведи всё в мелкие единицы, посчитай, переведи обратно","4 т 68 кг + 9 ц 52 кг = 4068 + 952 = 5020 кг = 5 т 20 кг."],
+ ["Единицы длины","1 км = 1000 м, 1 м = 10 дм = 100 см = 1000 мм, 1 дм = 100 мм","3 км 45 м − 1 км 600 м = 3045 − 1600 = 1445 м = 1 км 445 м."],
+ ["Единицы времени","1 сут. = 24 ч, 1 ч = 60 мин, 1 мин = 60 с","2 сут. 3 ч = 51 ч. 4 мин 10 с = 250 с."],
+ ["Сколько времени в пути","конец − начало; если минут не хватает, займи 1 ч = 60 мин","14 ч 14 мин − 9 ч 18 мин = 13 ч 74 мин − 9 ч 18 мин = 4 ч 56 мин."],
+ ["Во сколько приехал","начало + время в пути; 60 минут превращай в 1 час","9 ч 45 мин + 2 ч 30 мин = 11 ч 75 мин = 12 ч 15 мин."],
+ ["Круглые числа","умножь без нулей, потом припиши все нули обоих чисел","230 · 40: 23 · 4 = 92, нулей два → 9200."],
+ ["Деление с остатком","остаток всегда меньше делителя; проверка: делитель · частное + остаток = делимое","59 : 8 = 7 (ост. 3), проверка: 8 · 7 + 3 = 59."],
+ ["Какой бывает остаток","при делении на b остаток бывает от 0 до b − 1","При делении на 6 остатки: 0, 1, 2, 3, 4, 5. Остатка 6 не бывает."],
+ ["Порядок действий","скобки → умножение и деление слева направо → сложение и вычитание","40 − 40 : 8 · 2 = 40 − 10 = 30."],
+ ["Умножение на 0","если в произведении есть 0, всё произведение равно 0","25 · (9 − 9) · 4 = 25 · 0 · 4 = 0."],
+ ["Удобный способ","ищи пары: 4 · 25 = 100, 2 · 50 = 100, 5 · 20 = 100, 8 · 125 = 1000","4 · 17 · 25 = (4 · 25) · 17 = 100 · 17 = 1700."],
+ ["Выражения с буквами","«во сколько раз» — делим, «на сколько» — вычитаем, «в n раз дешевле» — это ещё не ответ","Яблонь d, груш d − 12. Во сколько раз яблонь больше: d : (d − 12)."],
+ ["Сначала одна часть","сначала делим (сколько в одном), потом умножаем","В 7 пакетах 28 кг: 28 : 7 = 4 кг, в 14 пакетах 4 · 14 = 56 кг."],
+ ["Читай условие","«A на 5 меньше, чем B» значит B больше: B = A + 5. «A в 3 раза больше, чем B» значит B = A : 3","Яблок 25 — это на 8 меньше, чем груш → груш 25 + 8 = 33."],
+ ["Периметр","периметр — сумма всех сторон: прямоугольник P = (a + b) · 2, квадрат P = a · 4","Стороны 9 см и 4 см: P = 26 см (а площадь 36 см² — не путай)."],
+ ["Площадь и периметр","S = a · b, поэтому неизвестная сторона b = S : a","S = 45 м², a = 5 м → b = 9 м, P = (5 + 9) · 2 = 28 м."],
+ ["Объём","V = a · b · c, ответ в кубических единицах (м³, см³)","Комната 6 × 4 × 3 м: V = 72 м³."],
+ ["Формула пути","s = v · t; 15 мин — четверть часа, 20 мин — треть, 30 мин — половина","800 км/ч за 15 мин: 800 : 4 = 200 км."],
+ ["Уравнения","множитель = произведение : другой множитель; делимое = частное · делитель; сложное уравнение решай снаружи внутрь","72 : (12 − x : 4) = 9 → 12 − x : 4 = 8 → x : 4 = 4 → x = 16."],
+ ["Пересечение и объединение","∩ — только общие элементы, ∪ — все элементы без повторов","E = {2, 4, 6, 8}, F = {6, 7, 8}: E ∩ F = {6, 8}, E ∪ F = {2, 4, 6, 7, 8}."],
+ ["Подмножество","если круг A внутри круга D, все элементы A есть и в D","A = {2, 8} внутри D, в D ещё 3, 5, 7 → D = {2, 3, 5, 7, 8}."],
+ ["Сравнение чисел","больше цифр — больше число; цифр поровну — сравнивай слева разряд за разрядом","600 900 < 608 000, потому что во втором разряде 0 < 8."],
+ ["Столбик","больше 9 в разряде — пиши единицы, а 1 переноси дальше; при вычитании занимай у соседа","793 178 + 1 345 906 = 2 139 084."],
+ ["Месяцы римскими цифрами","I янв, II фев, III март, IV апр, V май, VI июнь, VII июль, VIII авг, IX сен, X окт, XI ноя, XII дек","Весна: III, IV, V. Лето: VI, VII, VIII."],
+ ["Сумма и разница","из суммы вычти разницу и раздели на 2 — получишь меньшее число","60 учеников, разница 8: (60 − 8) : 2 = 26, а во втором 26 + 8 = 34."],
+ ["Симметрия","ось симметрии делит фигуру на две одинаковые половинки","Квадрат — 4 оси, прямоугольник — 2, равносторонний треугольник — 3."]
+];
 /* ---------- build a variant ---------- */
 function build(variant,len){R=rng(variant*7919+len*104729);const order=shuffle(G.map((_,i)=>i)).slice(0,len);
-  return order.map(i=>{const q=G[i]();q.perm=shuffle([0,1,2,3]);return q})}
+  return order.map(i=>{const q=G[i]();q.g=i;q.perm=shuffle([0,1,2,3]);return q})}
 
 /* ---------- storage ---------- */
 const key=(len,v)=>`polad-${len}-${v}`;
@@ -197,11 +245,15 @@ const gradeOf=(n,len)=>{const p=n/len;return p>=.9?5:p>=.7?4:p>=.5?3:2};
 /* ---------- UI ---------- */
 const app=document.getElementById("app");const L=["А","Б","В","Г"];
 let LEN=20;try{LEN=+localStorage.getItem("polad-len")||20}catch(e){}
-let test,idx,answers,VAR;
+let TAB="exam",test,idx,answers,VAR,LESSON;
+const ruleBox=g=>`<div class="rule"><b>Правило:</b> ${N[g][1]}<br><span class="rex">Пример: ${N[g][2]}</span></div>`;
 
+function tabs(){return `<div class="lens" role="tablist"><button class="len" data-tab="exam" aria-pressed="${TAB==="exam"}">Экзамены</button><button class="len" data-tab="learn" aria-pressed="${TAB==="learn"}">Обучение: ${N.length} уроков</button></div>`}
+function bindTabs(){app.querySelectorAll("[data-tab]").forEach(b=>b.onclick=()=>{TAB=b.dataset.tab;home()})}
 function home(){
+  if(TAB==="learn")return learn();
   let tiles="";for(let v=1;v<=100;v++){const b=getBest(LEN,v);const g=b?gradeOf(b.n,LEN):0;tiles+=`<button class="v ${g?(g>=5?"g5":g===4?"g4":"g3"):""}" data-v="${v}" aria-label="Вариант ${v}">${v}${b?`<small>${b.n}/${LEN}</small>`:""}</button>`}
-  app.innerHTML=`
+  app.innerHTML=`${tabs()}
   <section class="panel">
     <p class="step">1. Сколько вопросов?</p>
     <div class="lens">${[10,20,30].map(n=>`<button class="len" data-n="${n}" aria-pressed="${n===LEN}">${n} вопросов</button>`).join("")}</div>
@@ -211,35 +263,56 @@ function home(){
     <div class="vars">${tiles}</div>
     <div class="legend"><span style="--sw:var(--ok)">пройден на 5</span><span style="--sw:var(--mid)">на 4</span><span style="--sw:var(--bad)">на 3 и ниже — пройди ещё раз</span></div>
   </section>`;
-  app.querySelectorAll(".len").forEach(b=>b.onclick=()=>{LEN=+b.dataset.n;try{localStorage.setItem("polad-len",LEN)}catch(e){}home()});
+  bindTabs();
+  app.querySelectorAll("[data-n]").forEach(b=>b.onclick=()=>{LEN=+b.dataset.n;try{localStorage.setItem("polad-len",LEN)}catch(e){}home()});
   app.querySelectorAll(".v").forEach(b=>b.onclick=()=>start(+b.dataset.v));
   document.getElementById("rnd").onclick=()=>start(1+Math.floor(Math.random()*100));
 }
-function start(v){VAR=v;test=build(v,LEN);idx=0;answers=[];renderQ();window.scrollTo({top:0})}
+function learn(focus){
+  app.innerHTML=`${tabs()}
+  <p class="intro">Здесь все правила для экзамена. Прочитай урок, посмотри пример и нажми «Потренироваться» — будет 10 задач только на это правило.</p>
+  <div class="lessons">${N.map((n,i)=>{const b=getPr(i);return `<section class="lesson" id="L${i}"><h3><span class="ln">${i+1}</span>${n[0]}</h3>
+    <div class="rule">${n[1]}</div><div class="rex">Пример: ${n[2]}</div>
+    <div class="row"><span class="topic">${b?`Лучший результат: ${b}/10`:"Ещё не тренировался"}</span><button class="btn" data-p="${i}">Потренироваться</button></div></section>`}).join("")}</div>`;
+  bindTabs();
+  app.querySelectorAll("[data-p]").forEach(b=>b.onclick=()=>practice(+b.dataset.p));
+  if(focus!==undefined){const el=document.getElementById("L"+focus);if(el)el.scrollIntoView()}else window.scrollTo({top:0});
+}
+const getPr=i=>{try{return localStorage.getItem("polad-pr-"+i)}catch(e){return null}};
+const setPr=(i,n)=>{try{const b=+getPr(i)||0;if(n>b)localStorage.setItem("polad-pr-"+i,n)}catch(e){}};
+function start(v){VAR=v;LESSON=null;test=build(v,LEN);idx=0;answers=[];renderQ();window.scrollTo({top:0})}
+function practice(i){VAR=null;LESSON=i;R=Math.random;const seen=new Set();test=[];let g=0;
+  while(test.length<10&&g++<200){const q=G[i]();if(seen.has(q.q))continue;seen.add(q.q);q.g=i;q.perm=shuffle([0,1,2,3]);test.push(q)}
+  idx=0;answers=[];renderQ();window.scrollTo({top:0})}
+const label=()=>VAR?`Вариант ${VAR} · ${test.length} вопросов`:`Тренировка: ${N[LESSON][0]}`;
 function prog(){return `<div class="progress">${test.map((_,i)=>`<span class="dot ${answers[i]?answers[i].ok?"ok":"bad":i===idx?"cur":""}"></span>`).join("")}</div>`}
+function back(){if(VAR){TAB="exam";home()}else{TAB="learn";learn(LESSON)}}
 function renderQ(){const q=test[idx];
-  app.innerHTML=`<div class="row"><span class="topic">Вариант ${VAR} · ${LEN} вопросов</span><button class="btn ghost" id="quit">К вариантам</button></div>${prog()}
-  <section class="card"><div class="qhead"><span class="qnum">№ ${idx+1} из ${LEN}</span><span class="topic">${q.t}</span></div>
+  app.innerHTML=`<div class="row"><span class="topic">${label()}</span><button class="btn ghost" id="quit">${VAR?"К вариантам":"К урокам"}</button></div>${prog()}
+  <section class="card"><div class="qhead"><span class="qnum">№ ${idx+1} из ${test.length}</span><span class="topic">${q.t}</span></div>
   <p class="qtext">${q.q}</p>
   <div class="opts">${q.perm.map((oi,k)=>`<button class="opt" data-k="${k}"><span class="letter">${L[k]}</span><span>${q.o[oi]}</span></button>`).join("")}</div>
   <div id="fb"></div><div class="actions" id="act"></div></section>`;
-  document.getElementById("quit").onclick=home;
+  document.getElementById("quit").onclick=back;
   app.querySelectorAll(".opt").forEach(b=>b.onclick=()=>choose(+b.dataset.k));
 }
 function choose(k){const q=test[idx],ck=q.perm.indexOf(0),ok=k===ck;answers[idx]={ok,picked:q.o[q.perm[k]]};
   app.querySelectorAll(".opt").forEach((b,i)=>{b.disabled=true;b.classList.add(i===ck?"ok":i===k?"no":"dim")});
   app.querySelector(".progress").outerHTML=prog();
-  document.getElementById("fb").innerHTML=`<div class="feedback ${ok?"ok":"no"}"><b>${ok?"Верно!":"Неверно. Правильно: "+q.o[0]}</b>${q.e}</div>`;
-  const last=idx===LEN-1;document.getElementById("act").innerHTML=`<button class="btn" id="next">${last?"Узнать результат":"Дальше →"}</button>`;
+  document.getElementById("fb").innerHTML=`<div class="feedback ${ok?"ok":"no"}"><b>${ok?"Верно!":"Неверно. Правильно: "+q.o[0]}</b>${q.e}</div>${ok?"":ruleBox(q.g)}`;
+  const last=idx===test.length-1;document.getElementById("act").innerHTML=`<button class="btn" id="next">${last?"Узнать результат":"Дальше →"}</button>`;
   document.getElementById("next").onclick=()=>{if(last)finish();else{idx++;renderQ();window.scrollTo({top:0})}};
 }
-function finish(){const n=answers.filter(a=>a.ok).length,g=gradeOf(n,LEN);setBest(LEN,VAR,n);
-  const msg={5:"Отлично! Бери следующий вариант.",4:"Хорошо! Посмотри разбор ошибок.",3:"Неплохо, но пройди этот вариант ещё раз.",2:"Повтори шпаргалку и попробуй снова."}[g];
-  app.innerHTML=`<section class="card"><span class="topic">Вариант ${VAR} · ${LEN} вопросов</span><div class="score"><div class="mark">${g}</div><div><p class="big">${n} из ${LEN} верно</p><p style="margin:0">${msg}</p></div></div>
-  <div class="actions"><button class="btn ghost" id="home">К вариантам</button><button class="btn ghost" id="again">Ещё раз этот</button>${VAR<100?`<button class="btn" id="nextv">Вариант ${VAR+1} →</button>`:""}</div></section>
+function finish(){const len=test.length,n=answers.filter(a=>a.ok).length,g=gradeOf(n,len);if(VAR)setBest(LEN,VAR,n);else setPr(LESSON,n);
+  const msg={5:VAR?"Отлично! Бери следующий вариант.":"Отлично! Это правило ты знаешь.",4:"Хорошо! Посмотри разбор ошибок.",3:"Перечитай правило и пройди ещё раз.",2:"Открой урок, прочитай правило и пример, потом попробуй снова."}[g];
+  const wrong=[...new Set(test.filter((q,i)=>!answers[i].ok).map(q=>q.g))];
+  app.innerHTML=`<section class="card"><span class="topic">${label()}</span><div class="score"><div class="mark">${g}</div><div><p class="big">${n} из ${len} верно</p><p style="margin:0">${msg}</p></div></div>
+  <div class="actions"><button class="btn ghost" id="home">${VAR?"К вариантам":"К урокам"}</button><button class="btn ghost" id="again">${VAR?"Ещё раз этот":"Ещё 10 задач"}</button>${VAR&&VAR<100?`<button class="btn" id="nextv">Вариант ${VAR+1} →</button>`:""}</div></section>
+  ${wrong.length?`<section class="card"><span class="topic">Повтори эти уроки</span>${wrong.map(w=>`<div class="lesson-mini"><b>${w+1}. ${N[w][0]}</b>${ruleBox(w)}<div class="actions"><button class="btn ghost" data-p="${w}">Потренироваться на этом</button></div></div>`).join("")}</section>`:""}
   <section class="card"><span class="topic">Разбор</span><ul class="review">${test.map((q,i)=>{const a=answers[i];return `<li class="${a.ok?"good":""}"><b>${i+1}. ${q.q}</b><div class="a">${a.ok?"✓ "+q.o[0]:"Твой ответ: "+a.picked+" · Правильно: "+q.o[0]}<br>${a.ok?"":q.e}</div></li>`}).join("")}</ul></section>`;
-  document.getElementById("home").onclick=home;document.getElementById("again").onclick=()=>start(VAR);
-  const nv=document.getElementById("nextv");if(nv)nv.onclick=()=>start(VAR+1);window.scrollTo({top:0});
+  document.getElementById("home").onclick=back;document.getElementById("again").onclick=()=>VAR?start(VAR):practice(LESSON);
+  const nv=document.getElementById("nextv");if(nv)nv.onclick=()=>start(VAR+1);
+  app.querySelectorAll("[data-p]").forEach(b=>b.onclick=()=>practice(+b.dataset.p));window.scrollTo({top:0});
 }
 home();
 </script>
