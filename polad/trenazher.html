@@ -1,0 +1,247 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Тренажёр Полада</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Caveat:wght@600;700&family=Nunito:wght@400;600;700;800&display=swap">
+<style>
+/* Layout: squared exercise paper; pick test length + one of 100 variant tiles, then one question per screen */
+:root{
+  --paper:#fbfcff; --grid:#d9e4f5; --ink:#1f3a8a; --text:#1d2433; --muted:#5b6578;
+  --line:#c9d3e6; --ok:#1c8a4a; --okbg:#e5f5ec; --mid:#b26a00; --midbg:#fff1dc; --bad:#c62828; --badbg:#fdeaea; --card:#ffffff;
+  --hand:"Caveat","Comic Sans MS",cursive; --body:"Nunito",system-ui,-apple-system,"Segoe UI",sans-serif;
+}
+@media (prefers-color-scheme: dark){:root{
+  --paper:#141a26; --grid:#1f2a3d; --ink:#8fb0ff; --text:#e6ebf5; --muted:#9aa5ba;
+  --line:#2c3a52; --ok:#4cc985; --okbg:#173326; --mid:#f0b45a; --midbg:#3a2c14; --bad:#ff7a7a; --badbg:#3a1d1f; --card:#1a2131; color-scheme:dark}}
+*{box-sizing:border-box}
+body{margin:0;background-color:var(--paper);color:var(--text);font-family:var(--body);font-size:17px;line-height:1.5;
+  background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);background-size:22px 22px}
+.wrap{max-width:760px;margin:0 auto;padding-inline:16px;padding-block:24px 56px;display:flex;flex-direction:column;gap:18px}
+.back{color:var(--ink);font-weight:700;text-decoration:none}
+.eyebrow{font-size:13px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);font-weight:700}
+h1{font-family:var(--hand);color:var(--ink);font-size:46px;line-height:1.05;margin:4px 0 0}
+.panel{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:18px;display:flex;flex-direction:column;gap:14px}
+.step{font-weight:800;font-size:18px;margin:0}
+.lens{display:flex;gap:10px;flex-wrap:wrap}
+.len{font:inherit;font-weight:800;font-size:18px;padding:10px 18px;border-radius:12px;border:2px solid var(--line);background:var(--paper);color:var(--text);cursor:pointer}
+.len[aria-pressed="true"]{border-color:var(--ink);background:var(--ink);color:var(--card)}
+.vars{display:grid;grid-template-columns:repeat(10,1fr);gap:6px}
+@media (max-width:520px){.vars{grid-template-columns:repeat(5,1fr)}}
+.v{font:inherit;font-weight:800;font-size:15px;aspect-ratio:1;max-width:100%;border-radius:10px;border:2px solid var(--line);background:var(--paper);color:var(--text);cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;line-height:1.05;padding:0}
+.v small{font-size:11px;font-weight:700}
+.v:hover{border-color:var(--ink)}
+.v.g5{background:var(--okbg);border-color:var(--ok)} .v.g5 small{color:var(--ok)}
+.v.g4{background:var(--midbg);border-color:var(--mid)} .v.g4 small{color:var(--mid)}
+.v.g3{background:var(--badbg);border-color:var(--bad)} .v.g3 small{color:var(--bad)}
+.legend{display:flex;gap:14px;flex-wrap:wrap;font-size:14px;color:var(--muted)}
+.legend span::before{content:"";display:inline-block;width:12px;height:12px;border-radius:3px;margin-right:6px;vertical-align:-1px;background:var(--sw)}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center;justify-content:space-between}
+.progress{display:flex;gap:3px;flex-wrap:wrap}
+.dot{width:18px;height:8px;border-radius:4px;background:var(--line)}
+.dot.ok{background:var(--ok)} .dot.bad{background:var(--bad)} .dot.cur{background:var(--ink)}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:20px;display:flex;flex-direction:column;gap:16px;box-shadow:0 2px 0 var(--line)}
+.qhead{display:flex;justify-content:space-between;align-items:baseline;gap:12px;flex-wrap:wrap}
+.qnum{font-family:var(--hand);font-size:30px;color:var(--ink);line-height:1}
+.topic{font-size:13px;color:var(--muted);font-weight:700}
+.qtext{font-size:20px;font-weight:700;margin:0}
+.opts{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+@media (max-width:520px){.opts{grid-template-columns:1fr}}
+.opt{display:flex;align-items:center;gap:12px;text-align:left;font:inherit;font-size:18px;font-weight:600;color:var(--text);background:var(--paper);border:2px solid var(--line);border-radius:12px;padding:12px 14px;cursor:pointer;min-width:0;transition:border-color .15s,background .15s}
+.opt:hover:not(:disabled){border-color:var(--ink)}
+.opt:focus-visible,.btn:focus-visible,.v:focus-visible,.len:focus-visible{outline:3px solid var(--ink);outline-offset:2px}
+.opt:disabled{cursor:default}
+.letter{flex:none;width:30px;height:30px;border-radius:50%;display:grid;place-items:center;font-family:var(--hand);font-size:22px;color:var(--ink);border:2px solid var(--ink)}
+.opt.ok{border-color:var(--ok);background:var(--okbg)} .opt.ok .letter{color:var(--ok);border-color:var(--ok)}
+.opt.no{border-color:var(--bad);background:var(--badbg)} .opt.no .letter{color:var(--bad);border-color:var(--bad)}
+.opt.dim{opacity:.55}
+.feedback{border-radius:12px;padding:12px 14px;font-size:16px}
+.feedback b{font-family:var(--hand);font-size:24px;display:block;line-height:1.1;margin-bottom:2px}
+.feedback.ok{background:var(--okbg)} .feedback.ok b{color:var(--ok)}
+.feedback.no{background:var(--badbg)} .feedback.no b{color:var(--bad)}
+.actions{display:flex;justify-content:flex-end;gap:10px;flex-wrap:wrap}
+.btn{font:inherit;font-weight:800;font-size:17px;border:none;border-radius:12px;padding:12px 22px;cursor:pointer;background:var(--ink);color:var(--card)}
+.btn.ghost{background:transparent;color:var(--ink);border:2px solid var(--ink)}
+.score{display:flex;align-items:center;gap:20px;flex-wrap:wrap}
+.mark{font-family:var(--hand);font-size:96px;line-height:.8;color:var(--bad);border:4px solid var(--bad);border-radius:50%;width:120px;height:120px;display:grid;place-items:center;transform:rotate(-8deg);flex:none}
+.big{font-size:26px;font-weight:800;margin:0}
+.review{display:flex;flex-direction:column;gap:10px;margin:0;padding:0;list-style:none}
+.review li{border-left:4px solid var(--bad);padding:4px 0 4px 12px}
+.review li.good{border-left-color:var(--ok)}
+.review .a{color:var(--muted);font-size:15px}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <a class="back" href="./">← Все задания</a>
+  <header>
+    <span class="eyebrow">Математика · 3 класс · все темы тетради</span>
+    <h1>Тренажёр: 100 вариантов</h1>
+  </header>
+  <main id="app"></main>
+</div>
+
+<script>
+/* ---------- helpers ---------- */
+function rng(seed){return function(){seed|=0;seed=seed+0x6D2B79F5|0;let t=Math.imul(seed^seed>>>15,1|seed);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
+let R=Math.random;
+const ri=(a,b)=>a+Math.floor(R()*(b-a+1));
+const pick=a=>a[Math.floor(R()*a.length)];
+const shuffle=a=>{a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(R()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a};
+const NB=" ";
+const f=n=>{const s=String(n);return Math.abs(n)<10000?s:s.replace(/\B(?=(\d{3})+(?!\d))/g,NB)};
+const tkg=kg=>{const t=Math.floor(kg/1000),k=kg%1000;return (t?t+" т":"")+(t&&k?" ":"")+(k||!t?k+" кг":"")};
+const kmm=m=>{const k=Math.floor(m/1000),r=m%1000;return (k?k+" км":"")+(k&&r?" ":"")+(r||!k?r+" м":"")};
+const hm=min=>{const h=Math.floor(min/60),m=min%60;return h+" ч "+m+" мин"};
+const digit=(n,p)=>Math.floor(n/10**p)%10;
+function opts(ans,cands,fb){fb=fb||(()=>String(ans).replace(/\d+/,m=>String(Math.max(0,+m+ri(1,9)*(R()<.5?-1:1)))));const s=[String(ans)];for(let c of cands){c=String(c);if(c&&!s.includes(c)&&!/NaN|undefined|-/.test(c))s.push(c);if(s.length===4)break}
+  let g=0;while(s.length<4&&g++<200){const c=String(fb());if(!s.includes(c)&&!/NaN|-/.test(c))s.push(c)}return s}
+const numFb=(n,step)=>()=>f(Math.max(1,n+ri(-5,5)*(step||1)||n+step));
+
+/* ---------- 32 question generators ---------- */
+const G=[
+ ()=>{const k=pick([[1,"десятков"],[2,"сотен"],[3,"тысяч"],[4,"десятков тысяч"]]);let N;do{N=ri(1000000,98999999)}while(digit(N,k[0])===0);
+  const a=Math.floor(N/10**k[0]);return{t:"«Сколько всего»",q:`Сколько всего ${k[1]} в числе ${f(N)}?`,o:opts(f(a),[digit(N,k[0]),f(a%1000),f(Math.floor(N/10**(k[0]+1)))],numFb(a,10)),
+  e:`Закрываем последние ${k[0]} цифр(ы): ${f(N)} → ${f(a)}. А цифра в этом разряде — только ${digit(N,k[0])}.`}},
+ ()=>{const names=["единиц","десятков","сотен","тысяч","десятков тысяч","сотен тысяч","миллионов"];const p=ri(2,5);let N;do{N=ri(1000000,9999999)}while(new Set(String(N)).size<6);
+  const d=digit(N,p);return{t:"Разряды",q:`Какая цифра стоит в разряде ${names[p]} числа ${f(N)}?`,o:opts(d,[f(Math.floor(N/10**p)),digit(N,p+1),digit(N,p-1)],()=>ri(0,9)),
+  e:`Считаем разряды справа: единицы, десятки, сотни, тысячи… В разряде ${names[p]} стоит ${d}.`}},
+ ()=>{const z=ri(3,5),A=ri(11,989),N=A*10**z;if(R()<.5)return{t:"Соседи числа",q:`Какое число следует за ${f(N-1)}?`,o:opts(f(N),[f(N-2),f(N-10),f(N+1)]),e:`«Следует за» — прибавь 1: ${f(N-1)} + 1 = ${f(N)}.`};
+  return{t:"Соседи числа",q:`Какое число стоит перед ${f(N)}?`,o:opts(f(N-1),[f(N+1),f(N-1000>0?N-1000:N-100)+"",f(N-11)]),e:`«Стоит перед» — отними 1: ${f(N)} − 1 = ${f(N-1)}.`}},
+ ()=>{const k=ri(3,7),w=["","","","трёхзначное","четырёхзначное","пятизначное","шестизначное","семизначное"][k];
+  if(R()<.5){const a=10**(k-1);return{t:"Сколько цифр",q:`Самое маленькое ${w} число:`,o:opts(f(a),[f(10**k),f(10**(k-2)),f(Number("1".repeat(k)))]),e:`В нём ровно ${k} цифр: 1 и ${k-1} нул(ей) → ${f(a)}.`}}
+  const a=10**k-1;return{t:"Сколько цифр",q:`Самое большое ${w} число:`,o:opts(f(a),[f(10**(k+1)-1),f(10**(k-1)-1),f(10**k)]),e:`Ровно ${k} девяток: ${f(a)}.`}},
+ ()=>{const ds=shuffle([1,2,3,4,5,6,7,8,9]).slice(0,3).sort((a,b)=>a-b),[a,b,c]=ds,all=shuffle([0,a,b,c]).join(", ");
+  if(R()<.6)return{t:"Ноль впереди",q:`Самое маленькое четырёхзначное число из цифр ${all} (каждая один раз):`,o:opts(`${a}0${b}${c}`,[`0${a}${b}${c}`,`${a}${b}0${c}`,`${a}0${c}${b}`]),e:`Первой нельзя ставить 0. Ставим ${a}, потом 0, ${b}, ${c} → ${a}0${b}${c}.`};
+  return{t:"Составь число",q:`Самое большое четырёхзначное число из цифр ${all} (каждая один раз):`,o:opts(`${c}${b}${a}0`,[`${c}${b}0${a}`,`${a}0${b}${c}`,`0${a}${b}${c}`]),e:`Ставим цифры от большей к меньшей: ${c}, ${b}, ${a}, 0 → ${c}${b}${a}0.`}},
+ ()=>{const M=ri(1,99),T=ri(1,99),U=ri(1,99),n=M*1e6+T*1e3+U;return{t:"Запись числа",q:`Запиши цифрами: ${M} млн ${T} тыс. ${U} ед.`,o:opts(f(n),[f(Number(`${M}${T}${U}`)),f(Number(`${M}${String(T).padStart(3,"0")}${U}`)),f(M*1e9+T*1e3+U)]),
+  e:`По классам: ${M} | ${String(T).padStart(3,"0")} | ${String(U).padStart(3,"0")}. Пустые места заполняем нулями → ${f(n)}.`}},
+ ()=>{if(R()<.5){const a=ri(2,9),b=ri(1,99),n=a*1000+b;return{t:"Единицы массы",q:`${a} т ${b} кг = … кг`,o:opts(f(n)+" кг",[f(a*100+b)+" кг",f(Number(`${a}${b}`))+" кг",f(a*1000+b*10)+" кг"]),e:`1 т = 1000 кг: ${a*1000} + ${b} = ${f(n)} кг.`}}
+  const a=ri(1,9),c=ri(1,9),d=ri(1,99),n=a*1000+c*100+d;return{t:"Единицы массы",q:`${a} т ${c} ц ${d} кг = … кг`,o:opts(f(n)+" кг",[f(a*100+c*10+d)+" кг",f(Number(`${a}${c}${d}`))+" кг",f(a*1000+c*10+d)+" кг"]),e:`1 т = 1000 кг, 1 ц = 100 кг: ${a*1000} + ${c*100} + ${d} = ${f(n)} кг.`}},
+ ()=>{const a=ri(2,8),b=ri(10,99),c=ri(1,9),d=ri(10,99),tot=a*1000+b+c*100+d;return{t:"Сложение величин",q:`${a} т ${b} кг + ${c} ц ${d} кг = ?`,o:opts(tkg(tot),[tkg(a*1000+b*10+c*100+d),tkg(tot+100),tkg(tot+900)]),
+  e:`${a} т ${b} кг = ${f(a*1000+b)} кг (нуль в сотнях!), ${c} ц ${d} кг = ${c*100+d} кг. Сумма ${f(tot)} кг = ${tkg(tot)}.`}},
+ ()=>{const a=ri(3,9),c=ri(1,a-1),b=ri(10,400),d=ri(b+100,950),res=(a*1000+b)-(c*1000+d);return{t:"Единицы длины",q:`${a} км ${b} м − ${c} км ${d} м = ?`,o:opts(kmm(res),[kmm(res+1000),kmm((a-c)*1000+(d-b)),kmm(res+100)]),
+  e:`Переводим в метры: ${f(a*1000+b)} − ${f(c*1000+d)} = ${f(res)} м = ${kmm(res)}.`}},
+ ()=>{if(R()<.5){const a=ri(1,5),b=ri(1,23),c=ri(1,59),n=(a*24+b)*60+c;return{t:"Единицы времени",q:`${a} сут. ${b} ч ${c} мин = … мин`,o:opts(f(n)+" мин",[f((a*24+b)*60)+" мин",f((a*24+b)*100+c)+" мин",f((a*12+b)*60+c)+" мин"]),e:`${a} сут. = ${a*24} ч, всего ${a*24+b} ч. ${a*24+b} · 60 = ${f((a*24+b)*60)}, + ${c} = ${f(n)} мин.`}}
+  const a=ri(2,9),b=ri(1,59),n=a*60+b;return{t:"Единицы времени",q:`${a} мин ${b} с = … с`,o:opts(n+" с",[(a*100+b)+" с",(a*60)+" с",(a*10+b)+" с"]),e:`1 мин = 60 с: ${a} · 60 + ${b} = ${n} с.`}},
+ ()=>{const h1=ri(5,11),m1=ri(20,55),h2=h1+ri(2,7),m2=ri(1,m1-1),d=(h2*60+m2)-(h1*60+m1);return{t:"Время",q:`Поезд отправился в ${h1} ч ${m1} мин и прибыл в ${h2} ч ${m2} мин. Сколько времени он был в пути?`,o:opts(hm(d),[`${h2-h1} ч ${m1-m2} мин`,hm(d+60),`${Math.floor(d/60)} ч ${m1-m2} мин`]),
+  e:`Займём 1 ч: ${h2-1} ч ${m2+60} мин − ${h1} ч ${m1} мин = ${hm(d)}.`}},
+ ()=>{const h=ri(6,14),m=ri(25,55),H=ri(1,6),M=ri(60-m+1,55),t=h*60+m+H*60+M;return{t:"Время",q:`Автобус вышел в ${h} ч ${m} мин и был в пути ${H} ч ${M} мин. Во сколько он приехал?`,o:opts(hm(t),[`${h+H} ч ${m+M} мин`,hm(t-60),hm(t+60)]),
+  e:`${m} + ${M} = ${m+M} мин = 1 ч ${m+M-60} мин. ${h} + ${H} + 1 = ${h+H+1} ч → ${hm(t)}.`}},
+ ()=>{const x=ri(12,98),z1=ri(1,2),y=ri(2,9),z2=ri(1,3),p=x*y,a=p*10**(z1+z2);return{t:"Круглые числа",q:`${f(x*10**z1)} · ${f(y*10**z2)} = ?`,o:opts(f(a),[f(a/10),f(a*10),f((p+10)*10**(z1+z2))]),
+  e:`${x} · ${y} = ${p}, нулей всего ${z1+z2} → ${f(a)}.`}},
+ ()=>{const b=ri(3,9),q=ri(3,12),r=ri(1,b-1),a=b*q+r;return{t:"Деление с остатком",q:`${a} : ${b} = ?`,o:opts(`${q} (ост. ${r})`,[`${q-1} (ост. ${r+b})`,`${q+1} (ост. ${r})`,`${q} (ост. ${r+1<b?r+1:r-1})`]),
+  e:`${b} · ${q} = ${b*q}, ${a} − ${b*q} = ${r}. Остаток меньше делителя. Проверка: ${b} · ${q} + ${r} = ${a}.`}},
+ ()=>{const b=ri(4,9);return{t:"Остаток",q:`При делении на ${b} какой остаток НЕ может получиться?`,o:opts(b,[0,b-1,ri(1,b-2)],()=>ri(1,b-1)),e:`Остаток всегда меньше делителя: при делении на ${b} бывают остатки от 0 до ${b-1}.`}},
+ ()=>{const c=ri(2,9),x=ri(2,9),d=ri(2,5),b=c*x,a=x*d+ri(5,60);return{t:"Порядок действий",q:`${a} − ${b} : ${c} · ${d} = ?`,o:opts(a-x*d,[x*d,a-x,a+x*d]),
+  e:`Сначала деление и умножение слева направо: ${b} : ${c} = ${x}, ${x} · ${d} = ${x*d}. Потом ${a} − ${x*d} = ${a-x*d}.`}},
+ ()=>{const a=ri(3,30),b=ri(3,9),c=ri(2,9),e=ri(2,9),y=ri(2,9),d=e*y;return{t:"Умножение на 0",q:`${a} · (${b} − ${b}) · ${c} + ${d} : ${e} = ?`,o:opts(y,[a*c+y,0,a*c]),
+  e:`(${b} − ${b}) = 0, значит всё произведение равно 0. Остаётся ${d} : ${e} = ${y}.`}},
+ ()=>{const [p,q]=pick([[4,25],[2,50],[5,20],[8,125],[25,4]]),k=ri(11,99),arr=shuffle([p,k,q]);return{t:"Удобный способ",q:`Вычисли удобным способом: ${arr.join(" · ")}`,o:opts(f(p*q*k),[p+q+k,f(k*10),f(p*q*k*10)]),
+  e:`Переставим множители: (${p} · ${q}) · ${k} = ${f(p*q)} · ${k} = ${f(p*q*k)}.`}},
+ ()=>{const v=pick(["a","b","c","m","n","k","x","y"]);const t=ri(0,2);
+  if(t===0){const n=ri(3,8),k=ri(2,12),it=pick([["банках","л сока"],["коробках","кусков мела"],["пакетах","кг муки"]]);return{t:"Выражения",q:`В ${n} одинаковых ${it[0]} ${v} ${it[1]}. Сколько в ${k} таких ${it[0]}?`,o:opts(`${v} : ${n} · ${k}`,[`${v} · ${n} · ${k}`,`(${n} + ${k}) · ${v}`,`${v} : ${k} · ${n}`]),e:`${v} : ${n} — сколько в одной, потом умножаем на ${k}.`}}
+  if(t===1){const n=ri(2,6),it=pick([["Ручка","карандаш"],["Альбом","тетрадь"],["Книга","журнал"]]);return{t:"Выражения",q:`${it[0]} стоит ${v} руб., а ${it[1]} в ${n} раза дешевле. На сколько рублей ${it[0].toLowerCase()} дороже?`,o:opts(`${v} − ${v} : ${n}`,[`${v} : ${n}`,`${v} · ${n}`,`${v} − ${n}`]),e:`${it[1][0].toUpperCase()+it[1].slice(1)} стоит ${v} : ${n}. «На сколько» — вычитаем: ${v} − ${v} : ${n}.`}}
+  const n=ri(3,15),it=pick([["яблонь","груш"],["мальчиков","девочек"],["роз","тюльпанов"]]);return{t:"Выражения",q:`${it[0][0].toUpperCase()+it[0].slice(1)} ${v}, а ${it[1]} на ${n} меньше. Во сколько раз ${it[0]} больше, чем ${it[1]}?`,o:opts(`${v} : (${v} − ${n})`,[`${v} · (${v} − ${n})`,`${v} − (${v} − ${n})`,`${v} : ${n}`]),e:`${it[1][0].toUpperCase()+it[1].slice(1)}: ${v} − ${n}. «Во сколько раз» — делим: ${v} : (${v} − ${n}).`}},
+ ()=>{const n=ri(3,9),x=ri(3,12),k=ri(2,15),T=n*x,it=pick([["коробках","карандашей"],["пакетах","кг муки"],["бидонах","л молока"],["ящиках","кг яблок"]]);return{t:"Одна часть",q:`В ${n} одинаковых ${it[0]} ${T} ${it[1]}. Сколько ${it[1]} в ${k} таких ${it[0]}?`,o:opts(x*k,[T*k,T+k,x*k+x]),
+  e:`${T} : ${n} = ${x} — в одном. ${x} · ${k} = ${x*k}.`}},
+ ()=>{if(R()<.5){const X=ri(15,90),d=ri(5,30),T=pick([
+   [`В корзине ${X} яблок — это на ${d} меньше, чем груш. Сколько груш?`,"Яблок меньше, значит груш больше"],
+   [`Во второй день прошли ${X} м — это на ${d} м меньше, чем в третий день. Сколько метров прошли в третий день?`,"Во второй день прошли меньше, значит в третий больше"],
+   [`У Оли ${X} марок — это на ${d} меньше, чем у Ани. Сколько марок у Ани?`,"У Оли меньше, значит у Ани больше"]]);
+  return{t:"Читай условие",q:T[0],o:opts(X+d,[X-d,d,X]),e:`${T[1]}: ${X} + ${d} = ${X+d}.`}}
+  const y=ri(5,30),k=ri(2,4),X=y*k,T=pick([
+   [`Миша прочитал ${X} страниц — это в ${k} раза больше, чем Коля. Сколько страниц прочитал Коля?`,"Миша прочитал больше, значит Коля меньше"],
+   [`В саду ${X} яблонь — это в ${k} раза больше, чем вишен. Сколько вишен?`,"Яблонь больше, значит вишен меньше"],
+   [`У Димы ${X} наклеек — это в ${k} раза больше, чем у Саши. Сколько наклеек у Саши?`,"У Димы больше, значит у Саши меньше"]]);
+  return{t:"Читай условие",q:T[0],o:opts(y,[X*k,X-k,X+k]),e:`${T[1]}: ${X} : ${k} = ${y}.`}},
+ ()=>{if(R()<.4){const a=ri(3,15);return{t:"Периметр",q:`Квадрат со стороной ${a} см. Чему равен его периметр?`,o:opts(`${4*a} см`,[`${a*a} см`,`${2*a} см`,`${3*a} см`]),e:`У квадрата 4 равные стороны: ${a} · 4 = ${4*a} см. ${a*a} — это площадь.`}}
+  let a=ri(4,15),b;do{b=ri(2,12)}while(b===a);return{t:"Периметр",q:`Чему равен периметр прямоугольника со сторонами ${a} см и ${b} см?`,o:opts(`${2*(a+b)} см`,[`${a*b} см`,`${a+b} см`,`${2*a+b} см`]),e:`P = (${a} + ${b}) · 2 = ${2*(a+b)} см. ${a*b} — это площадь, а ${a+b} — половина периметра.`}},
+ ()=>{const a=ri(3,9),b=ri(3,12),S=a*b;return{t:"Площадь и периметр",q:`Площадь прямоугольника ${S} м², одна сторона ${a} м. Чему равен периметр?`,o:opts(`${2*(a+b)} м`,[`${a+b} м`,`${S} м`,`${2*S} м`]),e:`Вторая сторона: ${S} : ${a} = ${b} м. P = (${a} + ${b}) · 2 = ${2*(a+b)} м.`}},
+ ()=>{const a=ri(3,20),b=ri(2,10),c=ri(2,6),it=pick(["Комната","Бассейн","Аквариум-гигант","Склад"]);return{t:"Объём",q:`${it} имеет форму прямоугольного параллелепипеда: длина ${a} м, ширина ${b} м, высота ${c} м. Чему равен объём?`,o:opts(`${a*b*c} м³`,[`${a+b+c} м³`,`${a*b} м³`,`${2*(a*b+b*c+a*c)} м³`]),e:`V = a · b · c = ${a} · ${b} · ${c} = ${a*b*c} м³.`}},
+ ()=>{let v,t;do{v=pick([60,80,90,120,240,300,360,600,800,900]);t=pick([10,15,20,30,40,45])}while(v*t%60);const s=v*t/60,it=pick(["Самолёт","Поезд","Автомобиль","Вертолёт"]);return{t:"Формула пути",q:`${it} движется со скоростью ${v} км/ч. Какое расстояние он пройдёт за ${t} мин?`,o:opts(`${s} км`,[`${f(v*t)} км`,`${s*2} км`,`${v-t} км`]),
+  e:`${t} мин — это ${t}/60 часа. s = v · t = ${v} · ${t} : 60 = ${s} км.`}},
+ ()=>{const t=ri(0,2);if(t===0){const a=ri(3,9),x=ri(4,99),b=a*x;return{t:"Уравнения",q:`Реши уравнение: x · ${a} = ${b}`,o:opts(`x = ${x}`,[`x = ${b*a}`,`x = ${b-a}`,`x = ${b+a}`]),e:`Неизвестный множитель: x = ${b} : ${a} = ${x}. Проверка: ${x} · ${a} = ${b}.`}}
+  if(t===1){const a=ri(3,9),b=ri(4,40);return{t:"Уравнения",q:`Реши уравнение: x : ${a} = ${b}`,o:opts(`x = ${a*b}`,[`x = ${b+a}`,`x = ${b-a}`,`x = ${a*b+a}`]),e:`Неизвестное делимое: x = ${b} · ${a} = ${a*b}.`}}
+  const a=ri(2,6),y=ri(2,9),w=ri(2,9),k=y+w,m=ri(2,9),c=m*w,x=a*y;return{t:"Уравнения",q:`Реши уравнение: ${c} : (${k} − x : ${a}) = ${m}`,o:opts(`x = ${x}`,[`x = ${y}`,`x = ${a*k}`,`x = ${x+a}`]),e:`${k} − x : ${a} = ${c} : ${m} = ${w} → x : ${a} = ${y} → x = ${x}.`}},
+ ()=>{const pool=shuffle([1,2,3,4,5,6,7,8,9,10,11,12]),com=pool.slice(0,2),E=[...com,...pool.slice(2,4)].sort((a,b)=>a-b),F=[...com,...pool.slice(4,6)].sort((a,b)=>a-b),fm=s=>"{"+s.slice().sort((a,b)=>a-b).join(", ")+"}";
+  const I=E.filter(x=>F.includes(x)),U=[...new Set([...E,...F])];const inter=R()<.5,ev=E.filter(x=>!F.includes(x));
+  return{t:"Множества",q:`E = ${fm(E)}, F = ${fm(F)}. Найди ${inter?"E ∩ F (пересечение)":"E ∪ F (объединение)"}.`,o:opts(fm(inter?I:U),[fm(inter?U:I),fm(ev),fm(F)]),e:inter?`Пересечение — элементы, которые есть в обоих множествах: ${fm(I)}.`:`Объединение — все элементы обоих множеств без повторов: ${fm(U)}.`}},
+ ()=>{const A=ri(2,6),B=ri(2,6),inner=shuffle([1,2,3,4,5,6,7,8,9]).slice(0,A+B),ins=inner.slice(0,A).sort((a,b)=>a-b),out=inner.slice(A).sort((a,b)=>a-b),fm=s=>"{"+s.slice().sort((a,b)=>a-b).join(", ")+"}";
+  return{t:"Подмножество",q:`Круг A = ${fm(ins)} нарисован внутри круга D. В D вне круга A ещё числа ${out.join(", ")}. Из чего состоит D?`,o:opts(fm([...ins,...out]),[fm(out),fm(ins),fm(out.concat(ins.slice(1)))]),e:`Всё, что внутри A, тоже лежит в D. D = ${fm([...ins,...out])}.`}},
+ ()=>{let ds;do{ds=Array.from({length:7},()=>ri(0,9))}while(ds[0]===0||new Set(ds).size<4);const set=new Set();let g=0;while(set.size<4&&g++<300){const p=shuffle(ds);if(p[0]!==0)set.add(Number(p.join("")))}
+  const arr=[...set];if(arr.length<4)return G[0]();const mx=Math.max(...arr);return{t:"Сравнение",q:"Какое число самое большое?",o:opts(f(mx),arr.filter(x=>x!==mx).map(f)),e:`У всех чисел по 7 цифр. Сравниваем слева направо, разряд за разрядом: больше всех ${f(mx)}.`}},
+ ()=>{if(R()<.5){const a=ri(100000,699999),b=ri(100000,299999),s=a+b;return{t:"Сложение столбиком",q:`${f(a)} + ${f(b)} = ?`,o:opts(f(s),[f(s-1000),f(s+10000),f(s-100)]),e:`Складываем столбиком справа налево, не забываем переносить 1 в следующий разряд → ${f(s)}.`}}
+  const a=ri(400000,900000),b=ri(100000,a-50000),s=a-b;return{t:"Вычитание столбиком",q:`${f(a)} − ${f(b)} = ?`,o:opts(f(s),[f(s+1000),f(s-10000),f(s+100)]),e:`Вычитаем столбиком, занимая у соседнего разряда. Проверка: ${f(s)} + ${f(b)} = ${f(a)}.`}},
+ ()=>{const M=["январь","февраль","март","апрель","май","июнь","июль","август","сентябрь","октябрь","ноябрь","декабрь"],RN=["I","II","III","IV","V","VI","VII","VIII","IX","X","XI","XII"],n=ri(0,11);
+  return{t:"Календарь",q:`Какой месяц обозначают римской цифрой ${RN[n]}?`,o:opts(M[n],[M[(n+1)%12],M[(n+11)%12],M[(n+6)%12]]),e:`${RN[n]} = ${n+1}, а ${n+1}-й месяц года — ${M[n]}.`}},
+ ()=>{const x=ri(14,35),d=ri(2,12),S=2*x+d;return{t:"Задача",q:`В двух классах ${S} учеников, причём в одном на ${d} больше, чем в другом. Сколько учеников в каждом классе?`,o:opts(`${x} и ${x+d}`,[`${x-d} и ${x+2*d}`,`${S-d} и ${d}`,`${x+d} и ${x+2*d}`]),
+  e:`${S} − ${d} = ${2*x} — это два равных класса, ${2*x} : 2 = ${x}. Во втором ${x} + ${d} = ${x+d}.`}},
+ ()=>{const F=pick([["квадрата",4],["прямоугольника (не квадрата)",2],["равностороннего треугольника",3],["буквы «А»",1],["буквы «Н»",2],["буквы «Р»",0]]);return{t:"Симметрия",q:`Сколько осей симметрии у ${F[0]}?`,o:opts(F[1],[0,1,2,3,4].filter(x=>x!==F[1])),
+  e:F[1]===0?"У буквы «Р» нет осей симметрии: ни одна прямая не делит её на две одинаковые половинки.":`У ${F[0]} осей симметрии: ${F[1]}.`}}
+];
+
+/* ---------- build a variant ---------- */
+function build(variant,len){R=rng(variant*7919+len*104729);const order=shuffle(G.map((_,i)=>i)).slice(0,len);
+  return order.map(i=>{const q=G[i]();q.perm=shuffle([0,1,2,3]);return q})}
+
+/* ---------- storage ---------- */
+const key=(len,v)=>`polad-${len}-${v}`;
+const getBest=(len,v)=>{try{return JSON.parse(localStorage.getItem(key(len,v)))}catch(e){return null}};
+const setBest=(len,v,n)=>{try{const b=getBest(len,v);if(!b||n>b.n)localStorage.setItem(key(len,v),JSON.stringify({n,len}))}catch(e){}};
+const gradeOf=(n,len)=>{const p=n/len;return p>=.9?5:p>=.7?4:p>=.5?3:2};
+
+/* ---------- UI ---------- */
+const app=document.getElementById("app");const L=["А","Б","В","Г"];
+let LEN=20;try{LEN=+localStorage.getItem("polad-len")||20}catch(e){}
+let test,idx,answers,VAR;
+
+function home(){
+  let tiles="";for(let v=1;v<=100;v++){const b=getBest(LEN,v);const g=b?gradeOf(b.n,LEN):0;tiles+=`<button class="v ${g?(g>=5?"g5":g===4?"g4":"g3"):""}" data-v="${v}" aria-label="Вариант ${v}">${v}${b?`<small>${b.n}/${LEN}</small>`:""}</button>`}
+  app.innerHTML=`
+  <section class="panel">
+    <p class="step">1. Сколько вопросов?</p>
+    <div class="lens">${[10,20,30].map(n=>`<button class="len" data-n="${n}" aria-pressed="${n===LEN}">${n} вопросов</button>`).join("")}</div>
+  </section>
+  <section class="panel">
+    <div class="row"><p class="step">2. Выбери вариант</p><button class="btn ghost" id="rnd">Случайный вариант</button></div>
+    <div class="vars">${tiles}</div>
+    <div class="legend"><span style="--sw:var(--ok)">пройден на 5</span><span style="--sw:var(--mid)">на 4</span><span style="--sw:var(--bad)">на 3 и ниже — пройди ещё раз</span></div>
+  </section>`;
+  app.querySelectorAll(".len").forEach(b=>b.onclick=()=>{LEN=+b.dataset.n;try{localStorage.setItem("polad-len",LEN)}catch(e){}home()});
+  app.querySelectorAll(".v").forEach(b=>b.onclick=()=>start(+b.dataset.v));
+  document.getElementById("rnd").onclick=()=>start(1+Math.floor(Math.random()*100));
+}
+function start(v){VAR=v;test=build(v,LEN);idx=0;answers=[];renderQ();window.scrollTo({top:0})}
+function prog(){return `<div class="progress">${test.map((_,i)=>`<span class="dot ${answers[i]?answers[i].ok?"ok":"bad":i===idx?"cur":""}"></span>`).join("")}</div>`}
+function renderQ(){const q=test[idx];
+  app.innerHTML=`<div class="row"><span class="topic">Вариант ${VAR} · ${LEN} вопросов</span><button class="btn ghost" id="quit">К вариантам</button></div>${prog()}
+  <section class="card"><div class="qhead"><span class="qnum">№ ${idx+1} из ${LEN}</span><span class="topic">${q.t}</span></div>
+  <p class="qtext">${q.q}</p>
+  <div class="opts">${q.perm.map((oi,k)=>`<button class="opt" data-k="${k}"><span class="letter">${L[k]}</span><span>${q.o[oi]}</span></button>`).join("")}</div>
+  <div id="fb"></div><div class="actions" id="act"></div></section>`;
+  document.getElementById("quit").onclick=home;
+  app.querySelectorAll(".opt").forEach(b=>b.onclick=()=>choose(+b.dataset.k));
+}
+function choose(k){const q=test[idx],ck=q.perm.indexOf(0),ok=k===ck;answers[idx]={ok,picked:q.o[q.perm[k]]};
+  app.querySelectorAll(".opt").forEach((b,i)=>{b.disabled=true;b.classList.add(i===ck?"ok":i===k?"no":"dim")});
+  app.querySelector(".progress").outerHTML=prog();
+  document.getElementById("fb").innerHTML=`<div class="feedback ${ok?"ok":"no"}"><b>${ok?"Верно!":"Неверно. Правильно: "+q.o[0]}</b>${q.e}</div>`;
+  const last=idx===LEN-1;document.getElementById("act").innerHTML=`<button class="btn" id="next">${last?"Узнать результат":"Дальше →"}</button>`;
+  document.getElementById("next").onclick=()=>{if(last)finish();else{idx++;renderQ();window.scrollTo({top:0})}};
+}
+function finish(){const n=answers.filter(a=>a.ok).length,g=gradeOf(n,LEN);setBest(LEN,VAR,n);
+  const msg={5:"Отлично! Бери следующий вариант.",4:"Хорошо! Посмотри разбор ошибок.",3:"Неплохо, но пройди этот вариант ещё раз.",2:"Повтори шпаргалку и попробуй снова."}[g];
+  app.innerHTML=`<section class="card"><span class="topic">Вариант ${VAR} · ${LEN} вопросов</span><div class="score"><div class="mark">${g}</div><div><p class="big">${n} из ${LEN} верно</p><p style="margin:0">${msg}</p></div></div>
+  <div class="actions"><button class="btn ghost" id="home">К вариантам</button><button class="btn ghost" id="again">Ещё раз этот</button>${VAR<100?`<button class="btn" id="nextv">Вариант ${VAR+1} →</button>`:""}</div></section>
+  <section class="card"><span class="topic">Разбор</span><ul class="review">${test.map((q,i)=>{const a=answers[i];return `<li class="${a.ok?"good":""}"><b>${i+1}. ${q.q}</b><div class="a">${a.ok?"✓ "+q.o[0]:"Твой ответ: "+a.picked+" · Правильно: "+q.o[0]}<br>${a.ok?"":q.e}</div></li>`}).join("")}</ul></section>`;
+  document.getElementById("home").onclick=home;document.getElementById("again").onclick=()=>start(VAR);
+  const nv=document.getElementById("nextv");if(nv)nv.onclick=()=>start(VAR+1);window.scrollTo({top:0});
+}
+home();
+</script>
+</body>
+</html>
