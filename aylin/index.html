@@ -13,7 +13,7 @@
   --paper:#F2F4F8; --card:#FFFFFF; --ink:#17203A; --muted:#5A647A; --line:#DCE1EA; --soft:#E9EDF4;
   --accent:#3346C8; --accent-ink:#FFFFFF;
   --ok:#1E8655; --ok-bg:#E3F4EA; --bad:#C23A3A; --bad-bg:#FBE7E6; --warn:#B7791F; --warn-bg:#FBF0DC;
-  --az:#C8324B; --wh:#B0731A; --geo:#11808A; --nat:#4C5BD4; --lit:#9446AC;
+  --az:#C8324B; --wh:#B0731A; --geo:#11808A; --nat:#4C5BD4; --lit:#9446AC; --en:#0B76C5;
   --display:"Unbounded","Golos Text",system-ui,sans-serif;
   --body:"Golos Text",system-ui,-apple-system,"Segoe UI",sans-serif;
 }
@@ -21,12 +21,12 @@
   --paper:#11151F; --card:#1A2030; --ink:#E8ECF5; --muted:#9AA4BA; --line:#2C3448; --soft:#232A3C;
   --accent:#8B9BFF; --accent-ink:#0F1324;
   --ok:#53C28B; --ok-bg:#16302A; --bad:#FF7A72; --bad-bg:#3A1E22; --warn:#E8B04E; --warn-bg:#352A16;
-  --az:#FF6F86; --wh:#E5A847; --geo:#45C3CC; --nat:#8F9BFF; --lit:#D18BE8; color-scheme:dark}}
+  --az:#FF6F86; --wh:#E5A847; --geo:#45C3CC; --nat:#8F9BFF; --lit:#D18BE8; --en:#5DB4F5; color-scheme:dark}}
 :root[data-theme="dark"]{
   --paper:#11151F; --card:#1A2030; --ink:#E8ECF5; --muted:#9AA4BA; --line:#2C3448; --soft:#232A3C;
   --accent:#8B9BFF; --accent-ink:#0F1324;
   --ok:#53C28B; --ok-bg:#16302A; --bad:#FF7A72; --bad-bg:#3A1E22; --warn:#E8B04E; --warn-bg:#352A16;
-  --az:#FF6F86; --wh:#E5A847; --geo:#45C3CC; --nat:#8F9BFF; --lit:#D18BE8; color-scheme:dark}
+  --az:#FF6F86; --wh:#E5A847; --geo:#45C3CC; --nat:#8F9BFF; --lit:#D18BE8; --en:#5DB4F5; color-scheme:dark}
 *{box-sizing:border-box}
 body{background:var(--paper);color:var(--ink);font-family:var(--body);font-size:16px;line-height:1.5;-webkit-font-smoothing:antialiased}
 .wrap{max-width:780px;margin:0 auto;padding-inline:16px;padding-block:20px 64px;display:flex;flex-direction:column;gap:20px}
@@ -68,7 +68,8 @@ button:focus-visible,a:focus-visible{outline:3px solid var(--accent);outline-off
 .subj .meta{font-size:13px;color:var(--muted);display:flex;justify-content:space-between;gap:8px}
 .subj .go{margin-top:auto;font-weight:600;font-size:14px}
 .subj.mix{--c:var(--accent);background:linear-gradient(135deg,var(--card),var(--soft))}
-.c-az{--c:var(--az)}.c-wh{--c:var(--wh)}.c-geo{--c:var(--geo)}.c-nat{--c:var(--nat)}.c-lit{--c:var(--lit)}
+.c-az{--c:var(--az)}.c-wh{--c:var(--wh)}.c-geo{--c:var(--geo)}.c-nat{--c:var(--nat)}.c-lit{--c:var(--lit)}.c-en{--c:var(--en)}
+.subj.mso{border-style:dashed}
 
 .panel{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:18px;display:flex;flex-direction:column;gap:12px}
 .note{font-size:14px;color:var(--muted)}
@@ -149,10 +150,10 @@ button:focus-visible,a:focus-visible{outline:3px solid var(--accent);outline-off
   <header class="top">
     <div class="top-row">
       <div>
-        <div class="eyebrow">Тренажёр МЦКО · 6 класс</div>
+        <div class="eyebrow">Тренажёр МЦКО и МСО · 6 класс</div>
         <h1>Айлин</h1>
       </div>
-      <div class="sync" id="sync">Результаты сохраняются на этом устройстве</div>
+      <div class="sync" id="sync">Сохранение: на этом устройстве</div>
     </div>
     <div class="board" id="board"></div>
   </header>
@@ -639,9 +640,132 @@ const CHEATS = {
 </ul>`
 };
 
+// ===== Английский язык (стр. 44 Vocabulary + неправильные глаголы из дневника) =====
+SUBJECTS.en = { name: "Английский язык", short: "Английский", hue: "en" };
+Object.assign(TOPICS, {
+  "en-vocab": "Слова стр. 44 (Vocabulary)",
+  "en-coll":  "Сочетания слов (Match the halves)",
+  "en-verbs": "Неправильные глаголы",
+  "en-past":  "Past Simple в предложениях"
+});
+BANK.en = [
+["en01","en-vocab","Как переводится «call for help»?",["Звать на помощь","Позвонить другу","Спасти жизнь","Испытывать боль"],"call for help — звать на помощь."],
+["en02","en-vocab","Как переводится «save a life»?",["Спасти жизнь","Сохранить файл","Позвать на помощь","Снять дом"],"save a life — спасти жизнь."],
+["en03","en-vocab","Как переводится «look angry»?",["Выглядеть сердитым","Смотреть на ангела","Выглядеть грустным","Громко лаять"],"look + прилагательное = выглядеть каким-то: look angry, look sad, look excited."],
+["en04","en-vocab","Как переводится «bark loudly»?",["Громко лаять","Громко кричать","Тихо лаять","Громко звать на помощь"],"bark — лаять, loudly — громко."],
+["en05","en-vocab","Как переводится «break a leg»?",["Сломать ногу","Ушибить руку","Упасть в бассейн","Испытывать боль"],"break — ломать, leg — нога, arm — рука, neck — шея."],
+["en06","en-vocab","Как переводится «be in pain»?",["Испытывать боль","Быть в спешке","Быть за границей","Сломать ногу"],"pain — боль. be in a hurry — спешить."],
+["en07","en-vocab","Как переводится «fall into the pool»?",["Упасть в бассейн","Прыгнуть в реку","Плавать в бассейне","Упасть с лодки"],"fall into — упасть в (воду): the pool, the river, the pond."],
+["en08","en-vocab","Как переводится «rent a boat»?",["Взять напрокат лодку","Купить лодку","Починить лодку","Упасть с лодки"],"rent — брать напрокат, снимать (жильё): rent a boat, rent a flat."],
+["en09","en-vocab","Как сказать по-английски «снять квартиру»?",["rent a flat","break a flat","call a flat","look a flat"],"rent a flat; a house — снять квартиру; дом."],
+["en10","en-vocab","Как сказать по-английски «сломать руку»?",["break an arm","break a leg","fall an arm","be in an arm"],"arm — рука, leg — нога."],
+["en11","en-vocab","Как сказать по-английски «выглядеть грустной»?",["look sad","look excited","be in pain","call sad"],"sad — грустный, excited — взволнованный, радостный."],
+["en12","en-vocab","Как сказать по-английски «спешить»?",["be in a hurry","be in pain","fall into a hurry","call a hurry"],"be in a hurry — спешить; be in a foreign country — быть за границей."],
+["en13","en-coll","Какое слово подходит к «an arm, a neck»?",["break","rent","bark","call"],"break an arm, break a neck."],
+["en14","en-coll","Какое слово подходит к «the river; the pond»?",["fall into","rent","look","bark"],"fall into the river; fall into the pond."],
+["en15","en-coll","Какое слово подходит к «a flat; a house»?",["rent","break","bark","fall into"],"rent a flat; rent a house."],
+["en16","en-coll","Какое слово подходит к «excited; sad»?",["look","rent","break","call"],"look excited; look sad."],
+["en17","en-coll","Какое слово подходит к «loudly; at a person»?",["bark","rent","fall into","look"],"bark loudly; bark at a person."],
+["en18","en-coll","Какое слово подходит к «a friend; a name (Max)»?",["call","break","rent","bark"],"call a friend; call a name (Max)."],
+["en19","en-coll","Какое слово подходит к «in a hurry; in a foreign country»?",["be","look","rent","call"],"be in a hurry; be in a foreign country."],
+["en20","en-coll","Какое сочетание НЕПРАВИЛЬНОЕ?",["break a house","rent a flat","look excited","bark at a person"],"Дом не «ломают» в этом упражнении — его снимают: rent a house."],
+["en21","en-verbs","Вторая форма (Past Simple) глагола speak:",["spoke","speaked","spoken","speak"],"speak — spoke — spoken (говорить)."],
+["en22","en-verbs","Третья форма глагола speak:",["spoken","spoke","speaked","speaking"],"speak — spoke — spoken."],
+["en23","en-verbs","Вторая форма глагола fall:",["fell","falled","fallen","fall"],"fall — fell — fallen (падать)."],
+["en24","en-verbs","Третья форма глагола fall:",["fallen","fell","falled","felt"],"fall — fell — fallen. Не путай с feel — felt (чувствовать)."],
+["en25","en-verbs","Вторая форма глагола begin:",["began","begun","beginned","begins"],"begin — began — begun (начинать)."],
+["en26","en-verbs","Третья форма глагола begin:",["begun","began","beginned","begin"],"begin — began — begun."],
+["en27","en-verbs","Вторая форма глагола fly:",["flew","flied","flown","flyed"],"fly — flew — flown (летать)."],
+["en28","en-verbs","Третья форма глагола fly:",["flown","flew","flied","flyed"],"fly — flew — flown."],
+["en29","en-verbs","Вторая форма глагола cost:",["cost","costed","coast","costs"],"cost — cost — cost (стоить): все три формы одинаковые."],
+["en30","en-verbs","Вторая форма глагола learn:",["learned / learnt","learnd","lorn","learning"],"learn — learned/learnt — learned/learnt (учить). Возможны оба варианта."],
+["en31","en-verbs","Вторая форма глагола break:",["broke","breaked","broken","brake"],"break — broke — broken (ломать)."],
+["en32","en-verbs","Какой из этих глаголов ПРАВИЛЬНЫЙ (Past Simple с -ed)?",["rent","fall","break","fly"],"rent — rented. fall, break, fly — неправильные."],
+["en33","en-verbs","Как правильно: The dog ___ (bark) yesterday.",["barked","barkt","borke","barken"],"bark — правильный глагол: barked."],
+["en34","en-past","He ___ into the river yesterday.",["fell","falls","fallen","fall"],"Yesterday → Past Simple: fell."],
+["en35","en-past","The dog ___ loudly at a person last night.",["barked","barks","is barking","bark"],"last night → Past Simple: barked."],
+["en36","en-past","We ___ a boat on holiday last summer.",["rented","rent","rents","renting"],"last summer → Past Simple: rented."],
+["en37","en-past","She ___ her arm last week.",["broke","breaks","broken","break"],"last week → broke."],
+["en38","en-past","The lifeguard ___ a child's life yesterday.",["saved","saves","save","saving"],"save — saved."],
+["en39","en-past","The lesson ___ at 9 o'clock yesterday.",["began","begun","begins","beginned"],"begin — began."],
+["en40","en-past","The tickets ___ ten dollars last year.",["cost","costed","costs","coasted"],"cost — cost — cost."],
+["en41","en-past","They ___ to Baku by plane last month.",["flew","flown","flied","fly"],"fly — flew."],
+["en42","en-past","I ___ to my teacher in English yesterday.",["spoke","speaked","spoken","speak"],"speak — spoke."],
+["en43","en-past","He was in pain, so he ___ for help.",["called","calls","call","calling"],"call — called."],
+["en44","en-past","Yesterday Max ___ in a hurry.",["was","were","is","be"],"be в прошедшем: I/he/she/it — was; you/we/they — were."],
+["en45","en-past","My friends ___ in a foreign country last summer.",["were","was","are","be"],"they/we/you → were."],
+["en46","en-past","Как построить отрицание: «Он не упал в бассейн»?",["He didn't fall into the pool.","He didn't fell into the pool.","He not fell into the pool.","He doesn't fell into the pool."],"После didn't глагол в первой форме: didn't fall."],
+["en47","en-past","Как задать вопрос: «Вы сняли лодку?»",["Did you rent a boat?","Did you rented a boat?","Do you rented a boat?","You did rent a boat?"],"Did + подлежащее + глагол в 1-й форме."],
+["en48","en-past","Как перевести «He looked excited»?",["Он выглядел взволнованным","Он посмотрел на волнение","Он выглядит грустным","Он смотрел с волнением на друга"],"look + прилагательное = выглядеть каким-то."]
+];
+CHEATS["en-vocab"] = `
+<table><thead><tr><th>English</th><th>Перевод</th></tr></thead><tbody>
+<tr><td><b>call for help</b></td><td>звать на помощь</td></tr>
+<tr><td><b>save a life</b></td><td>спасти жизнь</td></tr>
+<tr><td><b>look angry</b></td><td>выглядеть сердитым</td></tr>
+<tr><td><b>bark loudly</b></td><td>громко лаять</td></tr>
+<tr><td><b>break a leg</b></td><td>сломать ногу</td></tr>
+<tr><td><b>be in pain</b></td><td>испытывать боль</td></tr>
+<tr><td><b>fall into the pool</b></td><td>упасть в бассейн</td></tr>
+<tr><td><b>rent a boat</b></td><td>взять напрокат лодку</td></tr>
+</tbody></table>`;
+CHEATS["en-coll"] = `
+<table><thead><tr><th>Глагол</th><th>с чем</th></tr></thead><tbody>
+<tr><td><b>be</b></td><td>in a hurry (спешить); in a foreign country (за границей)</td></tr>
+<tr><td><b>break</b></td><td>an arm (руку), a neck (шею)</td></tr>
+<tr><td><b>fall into</b></td><td>the river (реку); the pond (пруд)</td></tr>
+<tr><td><b>rent</b></td><td>a flat (квартиру); a house (дом)</td></tr>
+<tr><td><b>call</b></td><td>a friend (друга); a name — Max (по имени)</td></tr>
+<tr><td><b>look</b></td><td>excited (радостно взволнованным); sad (грустным)</td></tr>
+<tr><td><b>bark</b></td><td>loudly (громко); at a person (на человека)</td></tr>
+</tbody></table>`;
+CHEATS["en-verbs"] = `
+<table><thead><tr><th>V1</th><th>V2 (Past)</th><th>V3</th><th>Перевод</th></tr></thead><tbody>
+<tr><td>speak</td><td><b>spoke</b></td><td>spoken</td><td>говорить</td></tr>
+<tr><td>learn</td><td><b>learned / learnt</b></td><td>learned / learnt</td><td>учить</td></tr>
+<tr><td>fall</td><td><b>fell</b></td><td>fallen</td><td>падать</td></tr>
+<tr><td>cost</td><td><b>cost</b></td><td>cost</td><td>стоить</td></tr>
+<tr><td>begin</td><td><b>began</b></td><td>begun</td><td>начинать</td></tr>
+<tr><td>fly</td><td><b>flew</b></td><td>flown</td><td>летать</td></tr>
+<tr><td>break</td><td><b>broke</b></td><td>broken</td><td>ломать</td></tr>
+<tr><td>be</td><td><b>was / were</b></td><td>been</td><td>быть</td></tr>
+</tbody></table>
+<p>Правильные глаголы: + <b>-ed</b> — called, saved, rented, barked, looked.</p>`;
+CHEATS["en-past"] = `
+<ul class="facts">
+<li>Маркеры Past Simple: <b>yesterday, last week / month / summer / night, ... ago</b>.</li>
+<li>Утверждение: He <b>fell</b>. We <b>rented</b> a boat.</li>
+<li>Отрицание: He <b>didn't fall</b>. (после didn't — 1-я форма)</li>
+<li>Вопрос: <b>Did</b> you <b>rent</b> a boat? (после Did — 1-я форма)</li>
+<li>be: I / he / she / it — <b>was</b>; you / we / they — <b>were</b>.</li>
+</ul>`;
+
+// ===== География: дополнительные вопросы к МСО (Раздел 1 «Познаём пространство») =====
+BANK.geo.push(
+["geo50","geo-space","Вклад во что, по учебнику, помогают внести знания по географии?",["В устойчивое развитие планеты","В развитие космонавтики","В рост цен на нефть","В строительство пирамид"],"Знания помогают быть чуткими к природе и людям и вносить вклад в устойчивое развитие."],
+["geo51","geo-space","В каком веке построена Агдамская Джума мечеть?",["В XIX веке","В XII веке","В XVI веке","В XX веке"],"Дворец Панахали хана, Караван-сарай и крепость Шахбулаг — XVIII век."],
+["geo52","geo-space","Как называют лес дикой фисташки в Агдамском районе?",["Султанбудский","Гуручайский","Шахбулагский","Хачынский"],"Он растёт на Карабахской равнине, на берегу реки Хачынчай."],
+["geo53","geo-space","На каком полуострове расположен Баку?",["Абшеронском","Крымском","Аравийском","Малоазиатском"],"Баку — на побережье Каспийского моря."],
+["geo54","geo-space","В XII веке Баку был одним из главных городов…",["Ширваншахов","Сефевидов","Бакинского ханства","Ахеменидов"],"XVI век — государство Сефевидов, XVIII век — Бакинское ханство."],
+["geo55","geo-space","Сколько лет истории запечатлено на скалах Гобустана?",["15 тысяч лет","1,5 тысячи лет","150 лет","1,5 миллиона лет"],"Наскальные рисунки, пещерные поселения, курганы."],
+["geo56","geo-space","Какой из объектов Баку — современная постройка?",["Центр Гейдара Алиева","Девичья башня","Дворец Ширваншахов","Наскальные рисунки Гобустана"],"Современные: Центр Гейдара Алиева, Музей ковра, Пламенные башни, Дворец полумесяца."],
+["geo57","geo-space","Какую часть населения планеты затронуло вредное загрязнение воздуха в 2022 году?",["Около 90%","Около 10%","Около 50%","Около 1%"],"Самым загрязнённым назван Лахор (Пакистан)."],
+["geo58","geo-space","Лахор — это…",["второй по величине город Пакистана, более 13 млн жителей","столица Китая","город в Турции у озера Узунгёль","самый чистый город Азии"],"Загрязнение там вышло за рамки локального масштаба."],
+["geo59","geo-space","Джунгли Амазонки в учебнике — пример пространства какого масштаба?",["Регионального","Локального","Глобального","Школьного"],"А вот уничтожение вечнозелёных лесов может привести к глобальным изменениям."],
+["geo60","geo-space","Сколько лет истории у города Трабзон?",["Более 4000 лет","Около 400 лет","Около 100 лет","Более 40 000 лет"],"Трабзон известен туризмом; рядом — Узунгёль."],
+["geo61","geo-space","Какова площадь Баку?",["2,14 тыс. км²","86,6 тыс. км²","214 км²","21,4 тыс. км²"],"86,6 тыс. км² — площадь всего Азербайджана."],
+["geo62","geo-space","Фото Нью-Йорка 1856 и 2019 годов показывают особенность пространства…",["изменение","положение","взаимосвязь","разнообразие компонентов"],"Город вырос и изменился за полтора века."],
+["geo63","geo-space","Рисунок «горы, ледник, пустыня, лес» показывает особенность…",["разнообразие компонентов","изменение в пространстве","масштаб карты","взаимосвязь компонентов"],"Разные природные объекты в одном пространстве."],
+["geo64","geo-space","Как могут распространяться компоненты в пространстве?",["По горизонтали и по вертикали","Только по горизонтали","Только по кругу","Только вниз"],"Например, леса растут на разных высотах в горах."],
+["geo65","geo-space","К чему привела влажность почвы вдоль реки Кура?",["К образованию лесов","К образованию пустынь","К извержению вулканов","К таянию ледников"],"Это пример взаимосвязи компонентов."],
+["geo66","geo-space","Какие полезные ископаемые Азербайджан экспортирует?",["Нефть и природный газ","Золото и алмазы","Уголь и уран","Медь и олово"],"Запасы нефти и газа идут на экспорт, в т.ч. по трубопроводам."],
+["geo67","geo-space","Зачем в начале раздела приведён пример такси с ГПС?",["Чтобы показать, как описать место, где ты находишься и куда едешь","Чтобы научить водить машину","Чтобы рассказать о ценах на такси","Чтобы показать загрязнение воздуха"],"Раздел 1 начинается с вопроса: что вы знаете о месте, в котором живёте?"]
+);
+const MSO_GEO = BANK.geo.filter(r => r[1] === "geo-space").map(r => r[0]).concat(["geo01","geo02","geo03"]);
+
 (function(){
 "use strict";
-const TEST_LEN = 30, MIX_PER = 6, FIX_MAX = 30;
+const TEST_LEN = 30, MIX_PER = 5, FIX_MAX = 30;
 const LKEY = "aylin-mcko-attempts-v1", DKEY = "aylin-mcko-draft-v1";
 const $ = s => document.querySelector(s);
 const esc = s => String(s).replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
@@ -755,6 +879,7 @@ function renderTests(){
   $("#view").innerHTML = `<div style="display:flex;flex-direction:column;gap:16px">
     ${draft ? `<div class="resume"><span>Есть незаконченный тест: <b>${esc(draft.title)}</b>, вопрос ${draft.idx+1} из ${draft.items.length}</span><span class="row"><button class="btn" id="resume">Продолжить</button><button class="btn ghost" id="drop">Удалить</button></span></div>` : ""}
     <div class="subjects">
+      ${card("mso", "МСО География · Раздел 1", "c-geo mso", "30 вопросов · Познаём пространство")}
       ${Object.keys(SUBJECTS).map(k => card(k, SUBJECTS[k].name, "c-"+k, TEST_LEN+" вопросов")).join("")}
       ${card("mix", "Смешанный МЦКО", "mix", "30 вопросов · все предметы")}
     </div>
@@ -768,8 +893,9 @@ function makeItems(ids){ return ids.map(id => ({id, opts: shuffle(Q[id].opts), p
 function startTest(key){
   let ids;
   if (key === "mix") ids = shuffle(Object.keys(BANK).flatMap(s => shuffle(BANK[s].map(r=>r[0])).slice(0, MIX_PER)));
+  else if (key === "mso") ids = shuffle(MSO_GEO).slice(0, TEST_LEN);
   else ids = shuffle(BANK[key].map(r=>r[0])).slice(0, TEST_LEN);
-  quiz = {kind:"test", subj:key, title: key === "mix" ? "Смешанный МЦКО" : SUBJECTS[key].name, items: makeItems(ids), idx:0, started:Date.now()};
+  quiz = {kind:"test", subj:key, title: key === "mix" ? "Смешанный МЦКО" : key === "mso" ? "МСО География · Раздел 1" : SUBJECTS[key].name, items: makeItems(ids), idx:0, started:Date.now()};
   lsSet(DKEY, quiz); renderAll(); window.scrollTo(0,0);
 }
 function startFix(subj){
@@ -900,10 +1026,10 @@ function renderDiary(){
   if (!t.length) { $("#view").innerHTML = `<div class="panel empty"><h2>Дневник пуст</h2><p>После первого теста здесь появятся оценки по дням и по предметам.</p></div>`; return; }
   const days = {}; t.forEach(a => (days[a.day] = days[a.day] || []).push(a));
   const keys = Object.keys(days).sort().reverse();
-  const subjRows = Object.keys(SUBJECTS).concat("mix").map(s => {
+  const subjRows = Object.keys(SUBJECTS).concat("mso","mix").map(s => {
     const m = t.filter(a=>a.subj===s), av = avg(m.map(a=>a.grade)), p = avg(m.map(a=>a.pct));
-    const name = s==="mix" ? "Смешанный" : SUBJECTS[s].short;
-    return `<div class="sbar ${s==="mix"?"":"c-"+s}" style="${s==="mix"?"--c:var(--accent)":""}"><span>${name}</span><span class="track"><i style="width:${p||0}%"></i></span><b class="num ${gcls(av)}">${fmt(av)}</b></div>`;
+    const name = s==="mix" ? "Смешанный" : s==="mso" ? "МСО Геогр." : SUBJECTS[s].short;
+    return `<div class="sbar ${s==="mix"?"":s==="mso"?"c-geo":"c-"+s}" style="${s==="mix"?"--c:var(--accent)":""}"><span>${name}</span><span class="track"><i style="width:${p||0}%"></i></span><b class="num ${gcls(av)}">${fmt(av)}</b></div>`;
   }).join("");
   $("#view").innerHTML = `<section style="display:flex;flex-direction:column;gap:16px">
     <div class="panel"><h2>По предметам</h2><p class="note">Полоска — средний процент правильных ответов, справа — средняя оценка.</p><div class="bars">${subjRows}</div></div>
