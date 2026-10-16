@@ -82,6 +82,24 @@ h1{font-family:var(--hand);color:var(--ink);font-size:46px;line-height:1.05;marg
 .rex{font-family:var(--body);font-size:15px;color:var(--text)}
 .rule .rex{display:inline-block;margin-top:4px}
 .lesson-mini{display:flex;flex-direction:column;gap:8px;padding-top:6px}
+/* Timer: sticky pill; amber past the "fast" mark, red past the norm */
+.timer{position:sticky;top:8px;z-index:5;display:flex;justify-content:space-between;align-items:center;gap:12px;background:var(--card);border:2px solid var(--ink);border-radius:999px;padding:8px 18px;box-shadow:0 2px 0 var(--line)}
+.timer .tv{font-size:30px;font-weight:800;font-variant-numeric:tabular-nums;color:var(--ink);line-height:1}
+.timer .tn{font-size:13px;color:var(--muted);font-weight:700;text-align:right;line-height:1.25}
+.timer.warn{border-color:var(--mid)} .timer.warn .tv{color:var(--mid)}
+.timer.over{border-color:var(--bad);background:var(--badbg)} .timer.over .tv{color:var(--bad)}
+.rules{margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:8px}
+.rules li{background:var(--paper);border:1px solid var(--line);border-radius:10px;padding:8px 12px;font-size:16px}
+.hint{margin:0;color:var(--muted);font-size:15px}
+.score>div{display:flex;flex-direction:column;gap:4px;min-width:0}
+.score p{margin:0}
+.tline{font-size:18px} .tline b{font-variant-numeric:tabular-nums} .norm{color:var(--muted);font-size:15px}
+.badge{display:inline-block;align-self:flex-start;background:var(--okbg);color:var(--ok);font-weight:800;border-radius:999px;padding:4px 12px}
+.hist{margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:6px}
+.hist li{display:grid;grid-template-columns:1fr auto auto 28px;gap:12px;align-items:center;padding:6px 12px;border-radius:10px;background:var(--paper);border:1px solid var(--line);font-variant-numeric:tabular-nums}
+.hist li.now{border-color:var(--ink)}
+.hist .hd{color:var(--muted);font-size:14px} .hist .ht{color:var(--muted);font-size:15px}
+.hist .hg{font-family:var(--hand);font-size:26px;color:var(--bad);line-height:1;text-align:center}
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
 </style>
 </head>
@@ -239,8 +257,34 @@ function build(variant,len){R=rng(variant*7919+len*104729);const order=shuffle(G
 /* ---------- storage ---------- */
 const key=(len,v)=>`polad-${len}-${v}`;
 const getBest=(len,v)=>{try{return JSON.parse(localStorage.getItem(key(len,v)))}catch(e){return null}};
-const setBest=(len,v,n)=>{try{const b=getBest(len,v);if(!b||n>b.n)localStorage.setItem(key(len,v),JSON.stringify({n,len}))}catch(e){}};
+const setBest=(len,v,n,t,g)=>{try{const b=getBest(len,v);if(!b||n>b.n||(n===b.n&&t<(b.t??Infinity)))localStorage.setItem(key(len,v),JSON.stringify({n,len,t,g}))}catch(e){}};
 const gradeOf=(n,len)=>{const p=n/len;return p>=.9?5:p>=.7?4:p>=.5?3:2};
+
+/* ---------- timer: norm 10/20/30 min for 10/20/30 questions; ≤75% of norm with a 5 = excellent on time, >125% = one grade down ---------- */
+const NORM_MIN={10:10,20:20,30:30};
+const limits=len=>{const n=(NORM_MIN[len]||len)*60;return{norm:n,fast:Math.round(n*.75),slow:Math.round(n*1.25)}};
+let t0=null,tick=null,finalSec=0;
+const fmt=s=>{s=Math.max(0,Math.floor(s));return String(Math.floor(s/60)).padStart(2,"0")+":"+String(s%60).padStart(2,"0")};
+const mins=s=>{const m=Math.floor(s/60),r=s%60;return r?`${m} мин ${r} с`:`${m} минут`};
+const elapsed=()=>t0?(Date.now()-t0)/1000:0;
+const warn=e=>{e.preventDefault();e.returnValue=""};
+function timerHTML(){if(!VAR||!t0)return"";const l=limits(test.length);return `<div class="timer" id="timer" role="timer"><span class="tv" id="tval">${fmt(elapsed())}</span><span class="tn">норма ${fmt(l.norm)}<br>на отлично — до ${fmt(l.fast)}</span></div>`}
+function updateTimer(){const el=document.getElementById("tval"),bar=document.getElementById("timer");if(!el||!bar||!test)return;const s=elapsed(),l=limits(test.length);el.textContent=fmt(s);bar.classList.toggle("warn",s>l.fast&&s<=l.norm);bar.classList.toggle("over",s>l.norm)}
+function startTimer(){t0=Date.now();clearInterval(tick);tick=setInterval(updateTimer,500);window.addEventListener("beforeunload",warn)}
+function stopTimer(){clearInterval(tick);tick=null;window.removeEventListener("beforeunload",warn);const s=elapsed();updateTimer();return s}
+function resetTimer(){clearInterval(tick);tick=null;t0=null;window.removeEventListener("beforeunload",warn)}
+document.addEventListener("visibilitychange",()=>{if(tick)updateTimer()});
+const HK="polad-tr-hist";
+const loadHist=()=>{try{return JSON.parse(localStorage.getItem(HK))||[]}catch(e){return[]}};
+const saveHist=r=>{try{const h=loadHist();h.unshift(r);localStorage.setItem(HK,JSON.stringify(h.slice(0,30)))}catch(e){}};
+const when=d=>new Date(d).toLocaleString("ru-RU",{day:"2-digit",month:"2-digit",hour:"2-digit",minute:"2-digit"});
+function histHTML(markFirst){const h=loadHist().slice(0,3);if(!h.length)return"";
+  return `<section class="card"><span class="topic">Последние результаты</span><ol class="hist">${h.map((r,i)=>`<li${markFirst&&i===0?' class="now"':''}><span class="hd">${markFirst&&i===0?"сейчас":when(r.d)} · вар. ${r.v}</span><b>${r.n}/${r.len}</b><span class="ht">⏱ ${fmt(r.t)}</span><span class="hg">${r.g}</span></li>`).join("")}</ol></section>`}
+function timeGrade(n,len,sec){const base=gradeOf(n,len),l=limits(len);let g=base,note="",fast=false;
+  if(sec>l.slow){g=Math.max(2,base-1);note=`Дольше ${mins(l.slow)} — минус один балл за время.`}
+  else if(sec<=l.fast){if(base===5){fast=true;note="Отлично по времени!"}else note="Быстро! Теперь подтяни точность."}
+  else note="По времени — в норме.";
+  return{g,base,note,fast}}
 
 /* ---------- UI ---------- */
 const app=document.getElementById("app");const L=["А","Б","В","Г"];
@@ -251,8 +295,9 @@ const ruleBox=g=>`<div class="rule"><b>Правило:</b> ${N[g][1]}<br><span c
 function tabs(){return `<div class="lens" role="tablist"><button class="len" data-tab="exam" aria-pressed="${TAB==="exam"}">Экзамены</button><button class="len" data-tab="learn" aria-pressed="${TAB==="learn"}">Обучение: ${N.length} уроков</button></div>`}
 function bindTabs(){app.querySelectorAll("[data-tab]").forEach(b=>b.onclick=()=>{TAB=b.dataset.tab;home()})}
 function home(){
+  resetTimer();
   if(TAB==="learn")return learn();
-  let tiles="";for(let v=1;v<=100;v++){const b=getBest(LEN,v);const g=b?gradeOf(b.n,LEN):0;tiles+=`<button class="v ${g?(g>=5?"g5":g===4?"g4":"g3"):""}" data-v="${v}" aria-label="Вариант ${v}">${v}${b?`<small>${b.n}/${LEN}</small>`:""}</button>`}
+  let tiles="";for(let v=1;v<=100;v++){const b=getBest(LEN,v);const g=b?(b.g||gradeOf(b.n,LEN)):0;tiles+=`<button class="v ${g?(g>=5?"g5":g===4?"g4":"g3"):""}" data-v="${v}" aria-label="Вариант ${v}">${v}${b?`<small>${b.n}/${LEN}</small>`:""}</button>`}
   app.innerHTML=`${tabs()}
   <section class="panel">
     <p class="step">1. Сколько вопросов?</p>
@@ -262,7 +307,8 @@ function home(){
     <div class="row"><p class="step">2. Выбери вариант</p><button class="btn ghost" id="rnd">Случайный вариант</button></div>
     <div class="vars">${tiles}</div>
     <div class="legend"><span style="--sw:var(--ok)">пройден на 5</span><span style="--sw:var(--mid)">на 4</span><span style="--sw:var(--bad)">на 3 и ниже — пройди ещё раз</span></div>
-  </section>`;
+    <p class="hint">⏱ Каждый вариант — на время: норма ${NORM_MIN[LEN]||LEN} мин, на отлично — до ${mins(limits(LEN).fast)}, дольше ${mins(limits(LEN).slow)} — минус балл.</p>
+  </section>${histHTML(false)}`;
   bindTabs();
   app.querySelectorAll("[data-n]").forEach(b=>b.onclick=()=>{LEN=+b.dataset.n;try{localStorage.setItem("polad-len",LEN)}catch(e){}home()});
   app.querySelectorAll(".v").forEach(b=>b.onclick=()=>start(+b.dataset.v));
@@ -280,34 +326,50 @@ function learn(focus){
 }
 const getPr=i=>{try{return localStorage.getItem("polad-pr-"+i)}catch(e){return null}};
 const setPr=(i,n)=>{try{const b=+getPr(i)||0;if(n>b)localStorage.setItem("polad-pr-"+i,n)}catch(e){}};
-function start(v){VAR=v;LESSON=null;test=build(v,LEN);idx=0;answers=[];renderQ();window.scrollTo({top:0})}
-function practice(i){VAR=null;LESSON=i;R=Math.random;const seen=new Set();test=[];let g=0;
+/* exam variant: show the rules and a start button first; the clock starts only on the button */
+function start(v){VAR=v;LESSON=null;resetTimer();test=null;const l=limits(LEN);
+  app.innerHTML=`<div class="row"><span class="topic">Вариант ${v} · ${LEN} вопросов</span><button class="btn ghost" id="quit">К вариантам</button></div>
+  <section class="card"><span class="topic">Перед стартом</span><p class="qtext">${LEN} вопросов на время</p>
+  <ul class="rules"><li>⏱ Норма — <b>${mins(l.norm)}</b>. Таймер запустится по кнопке и не остановится до последнего ответа.</li>
+  <li>⚡ Пятёрка быстрее чем за <b>${mins(l.fast)}</b> — «отлично по времени».</li>
+  <li>🐢 Дольше <b>${mins(l.slow)}</b> — минус один балл.</li></ul>
+  <p class="hint">Сядь удобно, убери лишнее со стола и не закрывай вкладку: если выйти, экзамен начнётся заново.</p>
+  <div class="actions"><button class="btn" id="go">Начать экзамен</button></div></section>${histHTML(false)}`;
+  document.getElementById("quit").onclick=back;document.getElementById("go").onclick=()=>run(v);window.scrollTo({top:0})}
+function run(v){VAR=v;LESSON=null;test=build(v,LEN);idx=0;answers=[];finalSec=0;startTimer();renderQ();window.scrollTo({top:0})}
+function practice(i){VAR=null;LESSON=i;resetTimer();R=Math.random;const seen=new Set();test=[];let g=0;
   while(test.length<10&&g++<200){const q=G[i]();if(seen.has(q.q))continue;seen.add(q.q);q.g=i;q.perm=shuffle([0,1,2,3]);test.push(q)}
   idx=0;answers=[];renderQ();window.scrollTo({top:0})}
 const label=()=>VAR?`Вариант ${VAR} · ${test.length} вопросов`:`Тренировка: ${N[LESSON][0]}`;
 function prog(){return `<div class="progress">${test.map((_,i)=>`<span class="dot ${answers[i]?answers[i].ok?"ok":"bad":i===idx?"cur":""}"></span>`).join("")}</div>`}
-function back(){if(VAR){TAB="exam";home()}else{TAB="learn";learn(LESSON)}}
+function back(){resetTimer();if(VAR){TAB="exam";home()}else{TAB="learn";learn(LESSON)}}
 function renderQ(){const q=test[idx];
-  app.innerHTML=`<div class="row"><span class="topic">${label()}</span><button class="btn ghost" id="quit">${VAR?"К вариантам":"К урокам"}</button></div>${prog()}
+  app.innerHTML=`<div class="row"><span class="topic">${label()}</span><button class="btn ghost" id="quit">${VAR?"К вариантам":"К урокам"}</button></div>${timerHTML()}${prog()}
   <section class="card"><div class="qhead"><span class="qnum">№ ${idx+1} из ${test.length}</span><span class="topic">${q.t}</span></div>
   <p class="qtext">${q.q}</p>
   <div class="opts">${q.perm.map((oi,k)=>`<button class="opt" data-k="${k}"><span class="letter">${L[k]}</span><span>${q.o[oi]}</span></button>`).join("")}</div>
   <div id="fb"></div><div class="actions" id="act"></div></section>`;
-  document.getElementById("quit").onclick=back;
+  updateTimer();
+  document.getElementById("quit").onclick=()=>{if(tick&&!confirm("Прервать экзамен? Время не сохранится, и его придётся начать заново."))return;back()};
   app.querySelectorAll(".opt").forEach(b=>b.onclick=()=>choose(+b.dataset.k));
 }
 function choose(k){const q=test[idx],ck=q.perm.indexOf(0),ok=k===ck;answers[idx]={ok,picked:q.o[q.perm[k]]};
   app.querySelectorAll(".opt").forEach((b,i)=>{b.disabled=true;b.classList.add(i===ck?"ok":i===k?"no":"dim")});
   app.querySelector(".progress").outerHTML=prog();
   document.getElementById("fb").innerHTML=`<div class="feedback ${ok?"ok":"no"}"><b>${ok?"Верно!":"Неверно. Правильно: "+q.o[0]}</b>${q.e}</div>${ok?"":ruleBox(q.g)}`;
-  const last=idx===test.length-1;document.getElementById("act").innerHTML=`<button class="btn" id="next">${last?"Узнать результат":"Дальше →"}</button>`;
+  const last=idx===test.length-1;if(last&&tick)finalSec=stopTimer();
+  document.getElementById("act").innerHTML=`<button class="btn" id="next">${last?"Узнать результат":"Дальше →"}</button>`;
   document.getElementById("next").onclick=()=>{if(last)finish();else{idx++;renderQ();window.scrollTo({top:0})}};
 }
-function finish(){const len=test.length,n=answers.filter(a=>a.ok).length,g=gradeOf(n,len);if(VAR)setBest(LEN,VAR,n);else setPr(LESSON,n);
+function finish(){const len=test.length,n=answers.filter(a=>a.ok).length;let g=gradeOf(n,len),r=null,sec=0;
+  if(VAR){sec=finalSec||stopTimer();r=timeGrade(n,len,sec);g=r.g;setBest(LEN,VAR,n,Math.round(sec),g);saveHist({d:Date.now(),v:VAR,len,n,t:Math.round(sec),g})}else setPr(LESSON,n);
+  resetTimer();
   const msg={5:VAR?"Отлично! Бери следующий вариант.":"Отлично! Это правило ты знаешь.",4:"Хорошо! Посмотри разбор ошибок.",3:"Перечитай правило и пройди ещё раз.",2:"Открой урок, прочитай правило и пример, потом попробуй снова."}[g];
   const wrong=[...new Set(test.filter((q,i)=>!answers[i].ok).map(q=>q.g))];
-  app.innerHTML=`<section class="card"><span class="topic">${label()}</span><div class="score"><div class="mark">${g}</div><div><p class="big">${n} из ${len} верно</p><p style="margin:0">${msg}</p></div></div>
+  const timeBlock=r?`<p class="tline">⏱ Время: <b>${fmt(sec)}</b> <span class="norm">· норма ${fmt(limits(len).norm)}</span></p>${r.fast?`<p class="badge">⚡ Отлично по времени!</p>`:`<p>${r.note}</p>`}${r.g!==r.base?`<p class="hint">По знаниям — ${r.base}, с учётом времени — ${r.g}.</p>`:""}`:"";
+  app.innerHTML=`<section class="card"><span class="topic">${label()}</span><div class="score"><div class="mark">${g}</div><div><p class="big">${n} из ${len} верно</p>${timeBlock}<p>${msg}</p></div></div>
   <div class="actions"><button class="btn ghost" id="home">${VAR?"К вариантам":"К урокам"}</button><button class="btn ghost" id="again">${VAR?"Ещё раз этот":"Ещё 10 задач"}</button>${VAR&&VAR<100?`<button class="btn" id="nextv">Вариант ${VAR+1} →</button>`:""}</div></section>
+  ${VAR?histHTML(true):""}
   ${wrong.length?`<section class="card"><span class="topic">Повтори эти уроки</span>${wrong.map(w=>`<div class="lesson-mini"><b>${w+1}. ${N[w][0]}</b>${ruleBox(w)}<div class="actions"><button class="btn ghost" data-p="${w}">Потренироваться на этом</button></div></div>`).join("")}</section>`:""}
   <section class="card"><span class="topic">Разбор</span><ul class="review">${test.map((q,i)=>{const a=answers[i];return `<li class="${a.ok?"good":""}"><b>${i+1}. ${q.q}</b><div class="a">${a.ok?"✓ "+q.o[0]:"Твой ответ: "+a.picked+" · Правильно: "+q.o[0]}<br>${a.ok?"":q.e}</div></li>`}).join("")}</ul></section>`;
   document.getElementById("home").onclick=back;document.getElementById("again").onclick=()=>VAR?start(VAR):practice(LESSON);

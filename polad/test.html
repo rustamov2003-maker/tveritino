@@ -10,15 +10,15 @@
 /* Layout: a sheet of squared exercise paper; one task per screen, ink-blue handwriting accents, red teacher's marks */
 :root{
   --paper:#fbfcff; --grid:#d9e4f5; --ink:#1f3a8a; --text:#1d2433; --muted:#5b6578;
-  --line:#c9d3e6; --ok:#1c8a4a; --okbg:#e5f5ec; --bad:#c62828; --badbg:#fdeaea; --card:#ffffff;
+  --line:#c9d3e6; --ok:#1c8a4a; --okbg:#e5f5ec; --mid:#b26a00; --midbg:#fff1dc; --bad:#c62828; --badbg:#fdeaea; --card:#ffffff;
   --hand:"Caveat","Comic Sans MS",cursive; --body:"Nunito",system-ui,-apple-system,"Segoe UI",sans-serif;
 }
 @media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
   --paper:#141a26; --grid:#1f2a3d; --ink:#8fb0ff; --text:#e6ebf5; --muted:#9aa5ba;
-  --line:#2c3a52; --ok:#4cc985; --okbg:#173326; --bad:#ff7a7a; --badbg:#3a1d1f; --card:#1a2131; color-scheme:dark}}
+  --line:#2c3a52; --ok:#4cc985; --okbg:#173326; --mid:#f0b45a; --midbg:#3a2c14; --bad:#ff7a7a; --badbg:#3a1d1f; --card:#1a2131; color-scheme:dark}}
 :root[data-theme="dark"]{
   --paper:#141a26; --grid:#1f2a3d; --ink:#8fb0ff; --text:#e6ebf5; --muted:#9aa5ba;
-  --line:#2c3a52; --ok:#4cc985; --okbg:#173326; --bad:#ff7a7a; --badbg:#3a1d1f; --card:#1a2131; color-scheme:dark}
+  --line:#2c3a52; --ok:#4cc985; --okbg:#173326; --mid:#f0b45a; --midbg:#3a2c14; --bad:#ff7a7a; --badbg:#3a1d1f; --card:#1a2131; color-scheme:dark}
 html,body{min-height:100%}
 body{background-color:var(--paper);color:var(--text);font-family:var(--body);font-size:17px;line-height:1.5;
   background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);
@@ -68,6 +68,27 @@ h1{font-family:var(--hand);color:var(--ink);font-size:44px;line-height:1.05;marg
 .review .q{font-weight:700}
 .review .a{color:var(--muted);font-size:15px}
 .note{font-size:14px;color:var(--muted);text-align:center}
+/* Timer: a sticky pill that stays in view while scrolling; turns amber past the "fast" mark, red past the norm */
+.timer{position:sticky;top:8px;z-index:5;display:flex;justify-content:space-between;align-items:center;gap:12px;
+  background:var(--card);border:2px solid var(--ink);border-radius:999px;padding:8px 18px;box-shadow:0 2px 0 var(--line)}
+.timer .tv{font-size:30px;font-weight:800;font-variant-numeric:tabular-nums;color:var(--ink);line-height:1}
+.timer .tn{font-size:13px;color:var(--muted);font-weight:700;text-align:right;line-height:1.25}
+.timer.warn{border-color:var(--mid)} .timer.warn .tv{color:var(--mid)}
+.timer.over{border-color:var(--bad);background:var(--badbg)} .timer.over .tv{color:var(--bad)}
+.timer.done{position:static}   /* frozen clock on the results screen: no longer floats over content */
+.timer[hidden]{display:none}
+.rules{margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:8px}
+.rules li{background:var(--paper);border:1px solid var(--line);border-radius:10px;padding:8px 12px;font-size:16px}
+.hint{margin:0;color:var(--muted);font-size:15px}
+.score>div{display:flex;flex-direction:column;gap:4px;min-width:0}
+.tline{font-size:18px} .tline b{font-variant-numeric:tabular-nums} .norm{color:var(--muted);font-size:15px}
+.badge{display:inline-block;align-self:flex-start;background:var(--okbg);color:var(--ok);font-weight:800;border-radius:999px;padding:4px 12px}
+.hist{margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:6px}
+.hist li{display:grid;grid-template-columns:1fr auto auto 28px;gap:12px;align-items:center;padding:6px 12px;border-radius:10px;
+  background:var(--paper);border:1px solid var(--line);font-variant-numeric:tabular-nums}
+.hist li.now{border-color:var(--ink)}
+.hist .hd{color:var(--muted);font-size:14px} .hist .ht{color:var(--muted);font-size:15px}
+.hist .hg{font-family:var(--hand);font-size:26px;color:var(--bad);line-height:1;text-align:center}
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
 </style>
 <style>body{margin:0}*{box-sizing:border-box}</style>
@@ -82,9 +103,10 @@ h1{font-family:var(--hand);color:var(--ink);font-size:44px;line-height:1.05;marg
     <span class="eyebrow">Математика · 3 класс · по тетради Петерсон</span>
     <h1>Экзамен Полада</h1>
   </header>
+  <div class="timer" id="timer" hidden role="timer" aria-live="off"><span class="tv" id="tval">00:00</span><span class="tn">норма 20:00<br>на отлично — до 15:00</span></div>
   <div class="progress" id="progress" aria-label="Прогресс"></div>
   <main id="stage"></main>
-  <p class="note">20 вопросов · выбери один ответ из четырёх</p>
+  <p class="note">20 вопросов на время · выбери один ответ из четырёх</p>
 </div>
 
 <script>
@@ -132,16 +154,67 @@ const Q = [
 ];
 
 const L = ["А","Б","В","Г"];
-let order, idx, answers;
+/* Time limits in seconds: norm 20 min; ≤15 min with a 5 = "excellent on time"; >25 min = one grade down */
+const NORM = 20*60, FAST = 15*60, SLOW = 25*60;
+const HK = "polad-exam-hist";
+let order, idx, answers, t0 = null, tick = null, finalSec = 0;
 const stage = document.getElementById("stage");
 const prog = document.getElementById("progress");
+const timerEl = document.getElementById("timer");
+const tval = document.getElementById("tval");
 
 function shuffle(a){a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a}
 
+/* ---- timer: wall-clock based, so switching tabs never pauses it ---- */
+const fmt = s => { s = Math.max(0, Math.floor(s)); return String(Math.floor(s/60)).padStart(2,"0") + ":" + String(s%60).padStart(2,"0"); };
+const elapsed = () => t0 ? (Date.now() - t0)/1000 : 0;
+const warn = e => { e.preventDefault(); e.returnValue = ""; };
+function updateTimer(){
+  const s = elapsed();
+  tval.textContent = fmt(s);
+  timerEl.classList.toggle("warn", s > FAST && s <= NORM);
+  timerEl.classList.toggle("over", s > NORM);
+}
+function startTimer(){ t0 = Date.now(); timerEl.className = "timer"; timerEl.hidden = false; updateTimer(); clearInterval(tick); tick = setInterval(updateTimer, 500); window.addEventListener("beforeunload", warn); }
+function stopTimer(){ clearInterval(tick); tick = null; window.removeEventListener("beforeunload", warn); const s = elapsed(); updateTimer(); return s; }
+document.addEventListener("visibilitychange", () => { if (tick) updateTimer(); });
+
+/* ---- history of attempts (last 20 kept, last 3 shown) ---- */
+const loadHist = () => { try { return JSON.parse(localStorage.getItem(HK)) || []; } catch(e){ return []; } };
+const saveHist = r => { try { const h = loadHist(); h.unshift(r); localStorage.setItem(HK, JSON.stringify(h.slice(0, 20))); } catch(e){} };
+const when = d => new Date(d).toLocaleString("ru-RU", {day:"2-digit", month:"2-digit", hour:"2-digit", minute:"2-digit"});
+function histHTML(markFirst){
+  const h = loadHist().slice(0, 3);
+  if (!h.length) return "";
+  return `<section class="card"><span class="topic">Последние результаты</span><ol class="hist">${h.map((r,i) =>
+    `<li${markFirst && i===0 ? ' class="now"' : ''}><span class="hd">${markFirst && i===0 ? "сейчас" : when(r.d)}</span><b>${r.n}/${r.len || 20}</b><span class="ht">⏱ ${fmt(r.t)}</span><span class="hg">${r.g}</span></li>`
+  ).join("")}</ol></section>`;
+}
+
+function intro(){
+  clearInterval(tick); tick = null; t0 = null; timerEl.hidden = true; timerEl.className = "timer";
+  order = null; idx = 0; answers = []; prog.innerHTML = "";
+  stage.innerHTML = `
+    <section class="card">
+      <span class="topic">Перед стартом</span>
+      <p class="qtext">20 вопросов на время</p>
+      <ul class="rules">
+        <li>⏱ Норма — <b>20 минут</b>. Таймер запустится по кнопке и не остановится до последнего ответа.</li>
+        <li>⚡ Пятёрка быстрее чем за <b>15 минут</b> — «отлично по времени».</li>
+        <li>🐢 Дольше <b>25 минут</b> — минус один балл.</li>
+      </ul>
+      <p class="hint">Сядь удобно, убери лишнее со стола и не закрывай вкладку: если выйти, экзамен начнётся заново.</p>
+      <div class="actions"><button class="btn" id="go">Начать экзамен</button></div>
+    </section>${histHTML(false)}`;
+  document.getElementById("go").addEventListener("click", start);
+}
+
 function start(){
   order = Q.map(q => ({...q, perm: shuffle([0,1,2,3])}));
-  idx = 0; answers = [];
+  idx = 0; answers = []; finalSec = 0;
+  startTimer();
   renderQ();
+  window.scrollTo({top:0});
 }
 
 function renderProgress(){
@@ -181,6 +254,7 @@ function choose(k){
   document.getElementById("fb").innerHTML =
     `<div class="feedback ${ok?"ok":"bad"}"><b>${ok?"Верно!":"Неверно. Правильный ответ: "+q.o[q.a]}</b>${q.e}</div>`;
   const last = idx === order.length-1;
+  if (last) finalSec = stopTimer();   // the clock stops at the last answer, not at the results button
   document.getElementById("act").innerHTML = `<button class="btn" id="next">${last?"Узнать результат":"Дальше →"}</button>`;
   const nb = document.getElementById("next");
   nb.focus({preventScroll:true});
@@ -190,10 +264,23 @@ function choose(k){
 
 function grade(n){ if(n>=18) return ["5","Отлично! Ты всё выучил."]; if(n>=14) return ["4","Хорошо! Повтори темы с ошибками."]; if(n>=10) return ["3","Неплохо, но надо ещё позаниматься."]; return ["2","Пока рано. Повтори тетрадь и попробуй снова."]; }
 
+/* Final grade = knowledge grade adjusted by time: >25 min costs one point; ≤15 min with a 5 earns the "excellent on time" badge */
+function timeGrade(n, sec){
+  const [m, msg] = grade(n); const base = +m;
+  let g = base, note = "", fast = false;
+  if (sec > SLOW) { g = Math.max(2, base - 1); note = "Дольше 25 минут — минус один балл за время."; }
+  else if (sec <= FAST) { if (base === 5) { fast = true; note = "Отлично по времени!"; } else note = "Быстро! Теперь подтяни точность."; }
+  else note = "По времени — в норме.";
+  return {g, base, msg, note, fast};
+}
+
 function finish(){
   idx = order.length; renderProgress();
   const n = answers.filter(a=>a.ok).length;
-  const [m, msg] = grade(n);
+  const sec = finalSec || stopTimer();
+  timerEl.classList.add("done");
+  const r = timeGrade(n, sec);
+  saveHist({d: Date.now(), n, len: order.length, t: Math.round(sec), g: r.g});
   const items = order.map((q,i)=>{
     const a = answers[i];
     return `<li class="${a.ok?"okk":""}"><div class="q">${i+1}. ${q.q}</div>
@@ -201,15 +288,23 @@ function finish(){
   }).join("");
   stage.innerHTML = `
     <section class="card">
-      <div class="score"><div class="mark" aria-label="Оценка ${m}">${m}</div>
-        <div><p class="big">${n} из ${order.length} верно</p><p>${msg}</p></div></div>
+      <div class="score"><div class="mark" aria-label="Оценка ${r.g}">${r.g}</div>
+        <div>
+          <p class="big">${n} из ${order.length} верно</p>
+          <p class="tline">⏱ Время: <b>${fmt(sec)}</b> <span class="norm">· норма 20:00</span></p>
+          ${r.fast ? `<p class="badge">⚡ Отлично по времени!</p>` : `<p>${r.note}</p>`}
+          ${r.g !== r.base ? `<p class="hint">По знаниям — ${r.base}, с учётом времени — ${r.g}.</p>` : ""}
+          <p>${r.msg}</p>
+        </div></div>
       <div class="actions"><button class="btn" id="again">Пройти ещё раз</button></div>
     </section>
+    ${histHTML(true)}
     <section class="card"><span class="topic">Разбор ответов</span><ul class="review">${items}</ul></section>`;
-  document.getElementById("again").addEventListener("click", () => { start(); window.scrollTo({top:0}); });
+  document.getElementById("again").addEventListener("click", () => { intro(); window.scrollTo({top:0}); });
+  window.scrollTo({top:0});
 }
 
-start();
+intro();
 </script>
 
 </body>
